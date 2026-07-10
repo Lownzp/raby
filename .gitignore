@@ -46,10 +46,10 @@ app.*.map.json
 /android/build/
 
 # Local Codex workspaces and unrelated generated artifacts
-.agents/
-.codex_spreadsheet_work/
-dist/
-images/
-output/
+/.agents/
+/.codex_spreadsheet_work/
+/dist/
+/images/
+/output/
 iflytek_docx_*
 yf_docx_page_cli.png

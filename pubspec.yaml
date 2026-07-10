@@ -61,7 +61,10 @@ flutter:
     - assets/images/icons/home/icon_search.png
     - assets/images/icons/home/icon_add.png
     - assets/images/icons/home/icon_settings.png
-    - assets/images/rabbits/home/rabbit_home_hero.png
+    - assets/images/rabbits/home/hero_scene_background_v2.png
+    - assets/images/rabbits/home/rabbit_home_sticker_01.png
+    - assets/images/rabbits/home/rabbit_home_sticker_02.png
+    - assets/images/rabbits/home/rabbit_home_sticker_03.png
     - assets/images/rabbits/home/rabbit_timeline_01.png
     - assets/images/rabbits/home/rabbit_timeline_02.png
     - assets/images/rabbits/home/rabbit_timeline_03.png

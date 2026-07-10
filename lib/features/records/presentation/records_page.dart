@@ -89,7 +89,13 @@ abstract final class _HomeAssets {
   static const search = 'assets/images/icons/home/icon_search.png';
   static const add = 'assets/images/icons/home/icon_add.png';
   static const settings = 'assets/images/icons/home/icon_settings.png';
-  static const heroRabbit = 'assets/images/rabbits/home/rabbit_home_hero.png';
+  static const heroBackground =
+      'assets/images/rabbits/home/hero_scene_background_v2.png';
+  static const heroRabbitStickers = [
+    'assets/images/rabbits/home/rabbit_home_sticker_01.png',
+    'assets/images/rabbits/home/rabbit_home_sticker_02.png',
+    'assets/images/rabbits/home/rabbit_home_sticker_03.png',
+  ];
   static const timeline = [
     'assets/images/rabbits/home/rabbit_timeline_01.png',
     'assets/images/rabbits/home/rabbit_timeline_02.png',
@@ -168,13 +174,13 @@ class _HomeTopBar extends StatelessWidget {
           tooltip: '搜索日记',
           onTap: () => context.go(AppRoutes.recordsSearch),
         ),
-        const SizedBox(width: 9),
+        const SizedBox(width: 8),
         _RoundAssetButton(
           asset: _HomeAssets.add,
           tooltip: createDiaryTooltip,
           onTap: onCreateDiary,
         ),
-        const SizedBox(width: 9),
+        const SizedBox(width: 8),
         _RoundAssetButton(
           asset: _HomeAssets.settings,
           tooltip: '设置',
@@ -206,14 +212,19 @@ class _RoundAssetButton extends StatelessWidget {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,
-          child: Ink(
-            width: _size,
-            height: _size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: RabyColors.surface.withValues(alpha: 0.94),
+          child: SizedBox.square(
+            dimension: _size,
+            child: Center(
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: RabyColors.surface.withValues(alpha: 0.68),
+                ),
+                child: Center(child: Image.asset(asset, width: 24, height: 24)),
+              ),
             ),
-            child: Center(child: Image.asset(asset, width: 28, height: 28)),
           ),
         ),
       ),
@@ -270,29 +281,10 @@ class _RabbitOverviewCard extends ConsumerWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFFFFF1BC),
-                        const Color(0xFFFFF7DD),
-                        const Color(0xFFFFFBF2).withValues(alpha: 0.96),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: -42,
-                bottom: -2,
-                width: 356,
-                height: 258,
                 child: Image.asset(
-                  _HomeAssets.heroRabbit,
+                  _HomeAssets.heroBackground,
                   fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
+                  alignment: Alignment.center,
                 ),
               ),
               Positioned.fill(
@@ -302,14 +294,23 @@ class _RabbitOverviewCard extends ConsumerWidget {
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                       colors: [
-                        const Color(0xFFFFF1BC),
-                        const Color(0xFFFFF1BC),
-                        const Color(0xFFFFF1BC).withValues(alpha: 0.62),
+                        const Color(0xFFFFF0B8).withValues(alpha: 0.95),
+                        const Color(0xFFFFF0B8).withValues(alpha: 0.88),
+                        const Color(0xFFFFF0B8).withValues(alpha: 0.42),
                         const Color(0xFFFFF1BC).withValues(alpha: 0.00),
                       ],
-                      stops: const [0, 0.32, 0.48, 0.68],
+                      stops: const [0, 0.32, 0.50, 0.70],
                     ),
                   ),
+                ),
+              ),
+              Positioned(
+                right: -2,
+                bottom: -1,
+                width: 270,
+                height: 235,
+                child: const _RabbitStickerSwitcher(
+                  assets: _HomeAssets.heroRabbitStickers,
                 ),
               ),
               Positioned(
@@ -337,8 +338,13 @@ class _RabbitOverviewCard extends ConsumerWidget {
                             ).copyWith(fontFamily: _homeNameFont),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Image.asset(_HomeAssets.heart, width: 28, height: 28),
+                        const SizedBox(width: 6),
+                        Image.asset(
+                          _HomeAssets.carrot,
+                          width: 24,
+                          height: 24,
+                          fit: BoxFit.contain,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -368,20 +374,111 @@ class _RabbitOverviewCard extends ConsumerWidget {
                   onCreateWeight: onCreateWeight,
                 ),
               ),
-              const Positioned(
-                right: 11,
-                top: 9,
-                child: _StickerImage(asset: _HomeAssets.carrot, size: 50),
-              ),
-              const Positioned(
-                right: 24,
-                bottom: 14,
-                child: _StickerImage(asset: _HomeAssets.flower, size: 50),
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RabbitStickerSwitcher extends StatefulWidget {
+  const _RabbitStickerSwitcher({required this.assets});
+
+  final List<String> assets;
+
+  @override
+  State<_RabbitStickerSwitcher> createState() => _RabbitStickerSwitcherState();
+}
+
+class _RabbitStickerSwitcherState extends State<_RabbitStickerSwitcher> {
+  var _currentIndex = 0;
+  var _didPrecache = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecache) {
+      return;
+    }
+    _didPrecache = true;
+    for (final asset in widget.assets) {
+      precacheImage(AssetImage(asset), context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = widget.assets[_currentIndex];
+    return Semantics(
+      button: true,
+      label: '切换兔兔贴纸',
+      child: Tooltip(
+        message: '切换兔兔贴纸',
+        child: GestureDetector(
+          key: const ValueKey('home-rabbit-sticker-switcher'),
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            setState(() {
+              _currentIndex = (_currentIndex + 1) % widget.assets.length;
+            });
+          },
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: _RabbitHeroSticker(
+              key: ValueKey('home-rabbit-sticker-$_currentIndex'),
+              imageProvider: AssetImage(asset),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RabbitHeroSticker extends StatelessWidget {
+  const _RabbitHeroSticker({required this.imageProvider, super.key});
+
+  final ImageProvider imageProvider;
+
+  static const _outlineOffsets = [
+    Offset(-4, 0),
+    Offset(4, 0),
+    Offset(0, -4),
+    Offset(0, 4),
+    Offset(-3, -3),
+    Offset(3, -3),
+    Offset(-3, 3),
+    Offset(3, 3),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    Widget image({bool outline = false}) {
+      return Image(
+        image: imageProvider,
+        fit: BoxFit.contain,
+        alignment: Alignment.bottomRight,
+        filterQuality: FilterQuality.high,
+        color: outline ? Colors.white : null,
+        colorBlendMode: outline ? BlendMode.srcIn : null,
+        excludeFromSemantics: outline,
+        semanticLabel: outline ? null : '兔兔主图',
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [
+        for (final offset in _outlineOffsets)
+          Transform.translate(offset: offset, child: image(outline: true)),
+        image(),
+      ],
     );
   }
 }
@@ -508,7 +605,7 @@ class _WeightPanelContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 3),
         SizedBox(
           height: 31,
           child: FittedBox(
@@ -536,12 +633,12 @@ class _WeightPanelContent extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 1),
         _MiniWeightChart(records: records),
         const Spacer(),
         SizedBox(
           width: double.infinity,
-          height: 17,
+          height: 24,
           child: TextButton(
             style: TextButton.styleFrom(
               backgroundColor: RabyColors.surfaceWarm,
@@ -555,16 +652,24 @@ class _WeightPanelContent extends StatelessWidget {
               padding: EdgeInsets.zero,
             ),
             onPressed: onViewWeight,
-            child: Text(
-              '查看趋势 >',
-              style: _cuteStyle(
-                context,
-                Theme.of(context).textTheme.labelLarge,
-                color: RabyColors.primaryDeep,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                height: 1,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '查看趋势',
+                  style: _cuteStyle(
+                    context,
+                    Theme.of(context).textTheme.labelLarge,
+                    color: RabyColors.primaryDeep,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(width: 1),
+                const Icon(Icons.chevron_right_rounded, size: 13),
+              ],
             ),
           ),
         ),
@@ -667,24 +772,12 @@ class _MiniWeightChart extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 37,
+      height: 43,
       child: CustomPaint(
-        painter: _WeightTrendPainter(records: records, showLabels: true),
+        painter: _WeightTrendPainter(records: records),
         child: const SizedBox.expand(),
       ),
     );
-  }
-}
-
-class _StickerImage extends StatelessWidget {
-  const _StickerImage({required this.asset, required this.size});
-
-  final String asset;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(asset, width: size, height: size, fit: BoxFit.contain);
   }
 }
 
@@ -886,18 +979,25 @@ class _SectionHeader extends StatelessWidget {
         TextButton(
           onPressed: onViewAll,
           style: TextButton.styleFrom(
-            foregroundColor: RabyColors.secondary,
+            foregroundColor: _homeMutedText,
             padding: const EdgeInsets.symmetric(horizontal: 6),
           ),
-          child: Text(
-            '查看全部  >',
-            style: _cuteStyle(
-              context,
-              Theme.of(context).textTheme.labelLarge,
-              color: _homeText,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '查看全部',
+                style: _cuteStyle(
+                  context,
+                  Theme.of(context).textTheme.labelLarge,
+                  color: _homeMutedText,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 2),
+              const Icon(Icons.chevron_right_rounded, size: 16),
+            ],
           ),
         ),
       ],
@@ -1092,7 +1192,7 @@ class _HomeDiaryRow extends StatelessWidget {
                         );
                       },
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1125,7 +1225,7 @@ class _HomeDiaryRow extends StatelessWidget {
                       style: _cuteStyle(
                         context,
                         Theme.of(context).textTheme.bodyMedium,
-                        color: _homeText,
+                        color: _homeMutedText,
                         fontSize: 12.5,
                         fontWeight: FontWeight.w500,
                         height: 1.18,
@@ -1145,9 +1245,9 @@ class _HomeDiaryRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 3),
+              const SizedBox(width: 2),
               SizedBox(
-                width: 24,
+                width: 22,
                 height: _DiaryThumbnail.height,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1282,7 +1382,7 @@ class _DiaryThumbnail extends ConsumerWidget {
             },
           );
     final child = SizedBox(
-      width: 128,
+      width: 124,
       height: height,
       child: Stack(
         clipBehavior: Clip.none,
@@ -1477,10 +1577,9 @@ String _formatMonthDay(DateTime date) {
 }
 
 class _WeightTrendPainter extends CustomPainter {
-  const _WeightTrendPainter({required this.records, this.showLabels = false});
+  const _WeightTrendPainter({required this.records});
 
   final List<WeightRecord> records;
-  final bool showLabels;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1493,27 +1592,12 @@ class _WeightTrendPainter extends CustomPainter {
     final minWeight = weights.reduce(math.min);
     final maxWeight = weights.reduce(math.max);
     final span = maxWeight - minWeight;
-    final range = math.max(80, span);
+    final range = math.max(60, span * 1.15);
     final plotMin = minWeight - (range - span) / 2;
-    final labelWidth = showLabels ? 26.0 : 0.0;
-    final left = labelWidth + 4;
-    final right = size.width - 4;
-    final top = 5.0;
-    final bottom = size.height - 6;
-
-    if (showLabels) {
-      _paintLabel(canvas, '$maxWeight', Offset(0, top - 2));
-      _paintLabel(canvas, '$minWeight', Offset(0, bottom - 7));
-    }
-
-    final guidePaint = Paint()
-      ..color = const Color(0xFFEBD9A9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    for (var i = 0; i < 3; i += 1) {
-      final y = top + (bottom - top) * i / 2;
-      canvas.drawLine(Offset(left, y), Offset(right, y), guidePaint);
-    }
+    final left = 3.0;
+    final right = size.width - 3;
+    final top = 3.0;
+    final bottom = size.height - 4;
 
     Offset offsetFor(int index, int grams) {
       final x = points.length == 1
@@ -1537,55 +1621,17 @@ class _WeightTrendPainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0x55FFB000), Color(0x05FFB000)],
+        colors: [Color(0x2EFFB000), Color(0x02FFB000)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawPath(fillPath, fillPaint);
 
     final linePaint = Paint()
       ..color = RabyColors.primary
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
+      ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
     canvas.drawPath(path, linePaint);
-
-    final pointPaint = Paint()
-      ..color = RabyColors.surface
-      ..style = PaintingStyle.fill;
-    final pointBorderPaint = Paint()
-      ..color = RabyColors.primary
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8;
-    for (final offset in offsets) {
-      canvas
-        ..drawCircle(offset, 3.5, pointPaint)
-        ..drawCircle(offset, 3.5, pointBorderPaint);
-    }
-  }
-
-  void _paintLabel(Canvas canvas, String text, Offset offset) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: const TextStyle(
-          color: _homeMutedText,
-          fontSize: 8,
-          fontWeight: FontWeight.w500,
-          height: 1,
-          letterSpacing: 0,
-          fontFamily: _homeFullRoundFont,
-          fontFamilyFallback: [
-            _homeNameFont,
-            'Microsoft YaHei UI',
-            'PingFang SC',
-            'Noto Sans CJK SC',
-          ],
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-      maxLines: 1,
-    )..layout(maxWidth: 24);
-    painter.paint(canvas, offset);
   }
 
   Path _smoothTrendPath(List<Offset> offsets) {
@@ -1624,8 +1670,7 @@ class _WeightTrendPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _WeightTrendPainter oldDelegate) {
-    return oldDelegate.records != records ||
-        oldDelegate.showLabels != showLabels;
+    return oldDelegate.records != records;
   }
 }
 

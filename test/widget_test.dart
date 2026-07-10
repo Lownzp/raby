@@ -285,6 +285,30 @@ void main() {
     expect(find.text('写日记'), findsWidgets);
   });
 
+  testWidgets('home rabbit sticker cycles through three poses', (tester) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository(seed: [_rabbit()]);
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(_testApp(rabbitRepository));
+    await tester.pumpAndSettle();
+
+    final switcher = find.byKey(const ValueKey('home-rabbit-sticker-switcher'));
+    expect(find.byKey(const ValueKey('home-rabbit-sticker-0')), findsOneWidget);
+
+    await tester.tap(switcher);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('home-rabbit-sticker-1')), findsOneWidget);
+
+    await tester.tap(switcher);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('home-rabbit-sticker-2')), findsOneWidget);
+
+    await tester.tap(switcher);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('home-rabbit-sticker-0')), findsOneWidget);
+  });
+
   testWidgets('opens settings and hides unavailable v0.1.0 entries', (
     tester,
   ) async {
