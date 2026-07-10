@@ -45,8 +45,13 @@ app.*.map.json
 /android/app/release
 /android/build/
 
-# Local Codex workspaces and unrelated generated artifacts
-/.agents/
+# Local Codex workspaces and unrelated generated artifacts. Keep only the
+# project-specific Raby workflow skill under version control.
+/.agents/*
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/raby-flutter-development/
+!/.agents/skills/raby-flutter-development/**
 /.codex_spreadsheet_work/
 /dist/
 /images/

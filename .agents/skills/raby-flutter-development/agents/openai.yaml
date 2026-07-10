@@ -1,0 +1,4 @@
+interface:
+  display_name: "Raby Flutter Development"
+  short_description: "Build and visually verify the Raby Flutter app"
+  default_prompt: "Use $raby-flutter-development to implement and verify this Raby Flutter change."
