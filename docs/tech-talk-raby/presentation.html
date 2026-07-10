@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raby 项目技术文档</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <style>
+    :root[data-theme="vibrant"] {
+      --bg: linear-gradient(135deg, #314f68 0%, #672f51 100%);
+      --text: #f7fbff;
+      --muted: rgba(247, 251, 255, .78);
+      --card-bg: rgba(255,255,255,.95);
+      --card-text: #18202a;
+      --card-muted: #5a6676;
+      --accent: #1a8ca6;
+      --accent-2: #d15776;
+      --line: rgba(24, 32, 42, .12);
+      --code: #282c34;
+      --shadow: 0 18px 50px rgba(0,0,0,.18);
+    }
+    :root[data-theme="dark"] {
+      --bg: #111827;
+      --text: #eef4fb;
+      --muted: #aab8c9;
+      --card-bg: #172235;
+      --card-text: #eef4fb;
+      --card-muted: #aab8c9;
+      --accent: #5fd7f0;
+      --accent-2: #ff8aa7;
+      --line: rgba(255,255,255,.12);
+      --code: #090d14;
+      --shadow: 0 18px 50px rgba(0,0,0,.32);
+    }
+    :root[data-theme="light"] {
+      --bg: #f3f6f8;
+      --text: #17202b;
+      --muted: #5d6a78;
+      --card-bg: #ffffff;
+      --card-text: #17202b;
+      --card-muted: #5d6a78;
+      --accent: #167a95;
+      --accent-2: #ba405f;
+      --line: rgba(23,32,43,.12);
+      --code: #282c34;
+      --shadow: 0 18px 50px rgba(28,42,56,.12);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+    .theme-switcher {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,.20);
+      border-radius: 999px;
+      background: rgba(8, 12, 18, .34);
+      backdrop-filter: blur(14px);
+    }
+    .theme-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 700;
+      background: rgba(255,255,255,.16);
+    }
+    .theme-btn:hover { transform: translateY(-1px); }
+    .container {
+      width: min(1180px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 78px 0 80px;
+    }
+    header {
+      min-height: 470px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 48px;
+      align-items: center;
+    }
+    .eyebrow {
+      margin: 0 0 14px;
+      color: #84edff;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(48px, 7vw, 86px);
+      line-height: .96;
+      letter-spacing: 0;
+      font-weight: 950;
+    }
+    .subtitle {
+      margin: 22px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1.55;
+    }
+    .hero-card {
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 26px;
+      padding: 24px;
+      background: rgba(255,255,255,.10);
+      box-shadow: 0 24px 70px rgba(0,0,0,.16);
+      backdrop-filter: blur(18px);
+    }
+    .hero-card img {
+      width: 100%;
+      display: block;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .hero-card p {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+    .toc a {
+      display: block;
+      min-height: 78px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      color: var(--text);
+      text-decoration: none;
+      background: rgba(255,255,255,.10);
+      backdrop-filter: blur(12px);
+    }
+    section {
+      margin: 0 0 28px;
+      padding: 34px;
+      border-radius: 22px;
+      background: var(--card-bg);
+      color: var(--card-text);
+      box-shadow: var(--shadow);
+    }
+    h2 {
+      margin: 0 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid var(--accent);
+      color: var(--accent);
+      font-size: 34px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin: 24px 0 10px;
+      color: var(--card-text);
+      font-size: 22px;
+    }
+    p { margin: 0 0 14px; }
+    ul, ol {
+      margin: 12px 0 0 22px;
+      padding: 0;
+    }
+    li { margin: 7px 0; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .mini-card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+    }
+    .mini-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent-2);
+      font-size: 18px;
+    }
+    .muted { color: var(--card-muted); }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .flow span {
+      padding: 10px 13px;
+      border-radius: 999px;
+      background: rgba(26,140,166,.12);
+      color: var(--accent);
+      font-weight: 800;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      overflow: hidden;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--accent);
+      background: rgba(26,140,166,.10);
+    }
+    tr:last-child td { border-bottom: 0; }
+    pre {
+      margin: 18px 0;
+      padding: 20px;
+      border-radius: 16px;
+      overflow-x: auto;
+      background: var(--code);
+    }
+    code {
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      font-size: .94em;
+    }
+    .inline-code {
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(26,140,166,.12);
+      color: var(--accent);
+    }
+    .callout {
+      margin: 18px 0 0;
+      padding: 18px 20px;
+      border-left: 5px solid var(--accent-2);
+      border-radius: 14px;
+      background: rgba(209,87,118,.10);
+    }
+    footer {
+      padding-top: 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+    @media (max-width: 900px) {
+      .container { width: min(100vw - 28px, 1180px); padding-top: 92px; }
+      header { grid-template-columns: 1fr; min-height: auto; }
+      .toc, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      section { padding: 24px; }
+      .theme-switcher { left: 14px; right: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-switcher">
+    <button class="theme-btn" onclick="setTheme('vibrant')">活泼</button>
+    <button class="theme-btn" onclick="setTheme('dark')">暗黑</button>
+    <button class="theme-btn" onclick="setTheme('light')">明亮</button>
+  </div>
+
+  <main class="container">
+    <header>
+      <div>
+        <p class="eyebrow">Raby v0.1 / Local-first Flutter</p>
+        <h1>兔兔档案应用的工程骨架</h1>
+        <p class="subtitle">一份给接手者和评审者看的技术文档：从产品闭环、代码分层、本地数据、关键流程到后续演进。</p>
+      </div>
+      <aside class="hero-card">
+        <img src="../architecture/raby-architecture-svg-deck-cover.png" alt="Raby 架构 Deck 封面">
+        <p>配套架构图：<a href="../architecture/raby-architecture-svg-deck.html" style="color:#84edff">打开 SVG Deck</a></p>
+      </aside>
+    </header>
+
+    <nav class="toc" aria-label="目录">
+      <a href="#scope"><strong>01 产品闭环</strong><br><span class="muted">v0.1 做什么，不做什么</span></a>
+      <a href="#architecture"><strong>02 架构分层</strong><br><span class="muted">app / features / domain / data</span></a>
+      <a href="#data"><strong>03 本地数据</strong><br><span class="muted">SQLite、媒体路径、软删除</span></a>
+      <a href="#flows"><strong>04 关键流程</strong><br><span class="muted">启动、日记、体重</span></a>
+    </nav>
+
+    <section id="intro">
+      <h2>项目一句话</h2>
+      <p>Raby 是一个本地优先的兔兔档案 Flutter App，帮助个人养兔用户在无网络环境下建立兔子档案、记录日记照片、管理标签、记录体重，并通过时间轴和图表回看成长状态。</p>
+      <div class="callout">
+        <p>它看起来是一个温柔的小产品，但工程上要守住三件事：数据要可信，边界要清楚，未来要有余地。</p>
+      </div>
+    </section>
+
+    <section id="scope">
+      <h2>01 产品闭环</h2>
+      <p>v0.1 的目标是可记录内测版。它不追求完整宠物医疗管理，也不追求社交、云同步或家庭协作，第一目标是让用户愿意长期打开 App 记录，并相信自己的数据不会轻易丢失。</p>
+      <div class="flow">
+        <span>创建兔子档案</span>
+        <span>写日记和照片</span>
+        <span>打标签</span>
+        <span>记录体重</span>
+        <span>查看时间轴和趋势</span>
+      </div>
+      <div class="grid-2">
+        <div class="mini-card">
+          <strong>必须做</strong>
+          <ul>
+            <li>兔子档案新建、编辑、查看</li>
+            <li>日记新建、编辑、删除、时间轴列表</li>
+            <li>文本和最多 9 张照片</li>
+            <li>系统标签和自定义标签</li>
+            <li>体重记录和折线图</li>
+          </ul>
+        </div>
+        <div class="mini-card">
+          <strong>明确不做</strong>
+          <ul>
+            <li>账号、登录注册、云同步</li>
+            <li>社交 feed、点赞、评论</li>
+            <li>完整医疗流程</li>
+            <li>v0.1 的导入导出、视频、热力图和提醒</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>02 架构分层</h2>
+      <p>当前项目采用 feature-first 的轻量分层。它不是为了套模板，而是为了避免 UI、数据库和业务规则混在一起。</p>
+      <pre><code class="language-text">lib/
+├── app/       路由、主题、全局 Provider
+├── data/      Drift、SQLite、Repository 实现、媒体文件
+├── domain/    实体、枚举、Repository 接口、业务异常
+├── features/  页面、表单、Controller、局部状态
+└── shared/    跨页面复用 UI</code></pre>
+      <table>
+        <thead>
+          <tr><th>层</th><th>职责</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>app</code></td><td><code>MaterialApp.router</code>、go_router、主题、Repository Provider、启动装配。</td></tr>
+          <tr><td><code>features/*/presentation</code></td><td>页面布局、表单、列表、loading/empty/error/success 展示。</td></tr>
+          <tr><td><code>features/*/application</code></td><td>Riverpod Provider、Controller、异步命令、输入到 Domain 的转换。</td></tr>
+          <tr><td><code>domain</code></td><td>实体、枚举、Repository 接口、业务异常、纯业务规则。</td></tr>
+          <tr><td><code>data</code></td><td>Drift 表/DAO、Repository 实现、mapper、媒体文件服务。</td></tr>
+        </tbody>
+      </table>
+      <div class="grid-2">
+        <div class="mini-card">
+          <strong>推荐依赖方向</strong>
+          <pre><code class="language-text">app -> features -> domain
+app -> data -> domain
+features/application -> domain
+data -> domain
+shared -> app/theme</code></pre>
+        </div>
+        <div class="mini-card">
+          <strong>禁止穿透</strong>
+          <pre><code class="language-text">domain -> flutter / riverpod / drift
+presentation -> data/database
+presentation -> DAO / Table / Companion
+data -> features</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="startup">
+      <h2>启动和依赖装配</h2>
+      <p>Flutter 入口非常薄，应用状态由 Riverpod 的 <span class="inline-code">ProviderScope</span> 承载。</p>
+      <pre><code class="language-plaintext">void main() {
+  runApp(const ProviderScope(child: RabyApp()));
+}</code></pre>
+      <p>启动页先 seed 系统标签，再判断是否存在默认兔子。</p>
+      <pre><code class="language-plaintext">final startupProvider = FutureProvider&lt;StartupDestination&gt;((ref) async {
+  await ref.watch(tagRepositoryProvider).ensureSystemTagsSeeded();
+  final rabbit = await ref.watch(rabbitRepositoryProvider).getDefaultRabbit();
+  return rabbit == null
+      ? StartupDestination.onboarding
+      : StartupDestination.records;
+});</code></pre>
+      <p>Repository 装配集中在 <span class="inline-code">app/providers</span>，页面和 Controller 只依赖领域接口。</p>
+      <pre><code class="language-plaintext">final appDatabaseProvider = Provider&lt;AppDatabase&gt;((ref) {
+  final database = AppDatabase();
+  ref.onDispose(database.close);
+  return database;
+});
+
+final diaryRepositoryProvider = Provider&lt;DiaryRepository&gt;((ref) {
+  return DriftDiaryRepository(
+    ref.watch(appDatabaseProvider),
+    uuid: ref.watch(uuidProvider),
+  );
+});</code></pre>
+    </section>
+
+    <section id="data">
+      <h2>03 本地数据</h2>
+      <p>Raby 使用 Drift 管理 SQLite。结构化数据进数据库，照片等媒体文件保存在 App 私有目录，数据库只保存相对路径。</p>
+      <div class="grid-3">
+        <div class="mini-card"><strong>rabbits</strong><p>兔子基础档案，v0.1 展示默认兔，结构预留多兔。</p></div>
+        <div class="mini-card"><strong>diaries</strong><p>日记主表，按兔和记录时间形成时间轴。</p></div>
+        <div class="mini-card"><strong>diary_media</strong><p>日记图片与未来视频，保存相对路径与排序。</p></div>
+        <div class="mini-card"><strong>tags</strong><p>系统标签和当前兔子的自定义标签。</p></div>
+        <div class="mini-card"><strong>diary_tags</strong><p>日记和标签的多对多连接。</p></div>
+        <div class="mini-card"><strong>weight_records</strong><p>体重列表和趋势图数据来源。</p></div>
+      </div>
+      <h3>设计原则</h3>
+      <ul>
+        <li>业务主表使用 UUID v4，不用自增 ID。</li>
+        <li>保留 <code>createdAt</code>、<code>updatedAt</code>、<code>deletedAt</code>。</li>
+        <li><code>deletedAt == null</code> 表示有效数据。</li>
+        <li>创建、更新、删除时间使用 UTC epoch milliseconds。</li>
+        <li>生日、领养日等纯日期使用 <code>yyyy-MM-dd</code> 文本。</li>
+      </ul>
+      <pre><code class="language-text">media/diaries/{diaryId}/{mediaId}.jpg
+media/rabbits/{rabbitId}/avatar/{mediaId}.jpg</code></pre>
+    </section>
+
+    <section id="flows">
+      <h2>04 关键流程</h2>
+      <h3>写日记</h3>
+      <p>日记保存体现了 Raby 的边界：页面收集输入，Controller 执行业务命令，Repository 隐藏 Drift，Data 层处理事务。</p>
+      <pre><code class="language-text">DiaryEditPage
+  -> DiaryEditorController
+  -> MediaStorageService
+  -> DiaryRepository
+  -> Drift DAO transaction
+  -> SQLite + App 私有媒体目录</code></pre>
+      <pre><code class="language-plaintext">void _validateContentAndMedia({
+  required String? content,
+  required List&lt;DiaryMediaDraft&gt; mediaDrafts,
+}) {
+  if (content == null && mediaDrafts.isEmpty) {
+    throw const DomainValidationException('日记正文和照片至少需要一个');
+  }
+  if (mediaDrafts.length > 9) {
+    throw const DomainValidationException('单条日记最多支持 9 张照片');
+  }
+}</code></pre>
+      <ol>
+        <li>生成 <code>diaryId</code>。</li>
+        <li>修剪正文并校验。</li>
+        <li>为每张新图片生成 <code>mediaId</code>。</li>
+        <li>复制图片到私有目录。</li>
+        <li>构造 <code>Diary</code> 和 <code>DiaryMedia</code>。</li>
+        <li>去重 <code>tagIds</code>。</li>
+        <li>Repository 事务写入日记、媒体和标签连接。</li>
+        <li>失败时清理已经复制的媒体文件。</li>
+      </ol>
+    </section>
+
+    <section id="guardrails">
+      <h2>工程护栏</h2>
+      <div class="grid-2">
+        <div class="mini-card">
+          <strong>页面层</strong>
+          <p>只处理布局、输入、反馈和导航。不直接创建复杂 Domain 对象图，不直接操作数据库或媒体文件。</p>
+        </div>
+        <div class="mini-card">
+          <strong>应用层</strong>
+          <p>处理 Provider、Controller、异步命令、UUID、Clock、跨字段业务校验和失败清理。</p>
+        </div>
+        <div class="mini-card">
+          <strong>领域层</strong>
+          <p>保持纯 Dart，只表达业务对象和能力，不 import Flutter、Riverpod、Drift。</p>
+        </div>
+        <div class="mini-card">
+          <strong>数据层</strong>
+          <p>负责 Drift row 与 Domain 的映射，不能依赖 features，不能把 row 泄露到 UI。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="testing">
+      <h2>测试和验收</h2>
+      <p>当前项目已经包含数据库、Repository 和核心 Controller 测试。</p>
+      <pre><code class="language-text">test/data/database/app_database_test.dart
+test/data/repositories/drift_repositories_test.dart
+test/features/rabbits/rabbit_form_controller_test.dart
+test/features/records/diary_editor_controller_test.dart
+test/features/weight/weight_editor_controller_test.dart</code></pre>
+      <pre><code class="language-plaintext">. .\tooling\env.ps1
+flutter pub get
+flutter test</code></pre>
+      <pre><code class="language-plaintext">.\tooling\publish-public-apk.ps1 -ReleaseName raby-v0.1.0</code></pre>
+    </section>
+
+    <section id="next">
+      <h2>后续演进</h2>
+      <div class="grid-2">
+        <div class="mini-card">
+          <strong>v0.2</strong>
+          <ul>
+            <li>记录热力图</li>
+            <li>兔生大事记</li>
+            <li>体重异常提示</li>
+            <li>BCS 体况评分</li>
+            <li>自定义提醒</li>
+            <li>ZIP 数据导出</li>
+          </ul>
+        </div>
+        <div class="mini-card">
+          <strong>v1.0</strong>
+          <ul>
+            <li>多兔档案管理和切换</li>
+            <li>ZIP 导入覆盖和基础合并</li>
+            <li>媒体文件丢失提示</li>
+            <li>数据库迁移策略</li>
+            <li>基础异常日志</li>
+            <li>关键流程集成测试</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">
+        <p>Raby 当前架构不追求企业级复杂，而是在 MVP 阶段守住最重要的三件事：UI 不碰数据库细节，Domain 不被框架污染，本地数据为长期使用做好准备。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p>Generated with tech-talk-writer for Raby. Source docs are in <code>docs/tech-talk-raby/</code>.</p>
+    </footer>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+    }
+    setTheme(localStorage.getItem('theme') || 'vibrant');
+    if (window.hljs) {
+      window.hljs.highlightAll();
+    }
+  </script>
+</body>
+</html>

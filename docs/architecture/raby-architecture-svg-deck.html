@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raby 架构图 Deck</title>
+  <style>
+    :root {
+      --bg-0: #080b12;
+      --bg-1: #101827;
+      --ink: #eef7ff;
+      --muted: #93a8bd;
+      --line: rgba(159, 196, 255, .24);
+      --cyan: #5ff2ff;
+      --mint: #7cffbf;
+      --violet: #a98bff;
+      --rose: #ff7ca8;
+      --amber: #ffd166;
+      --panel: rgba(15, 24, 39, .72);
+      --panel-strong: rgba(20, 32, 52, .9);
+      --shadow: 0 24px 80px rgba(0, 0, 0, .48);
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 16%, rgba(95, 242, 255, .22), transparent 28%),
+        radial-gradient(circle at 82% 20%, rgba(169, 139, 255, .20), transparent 28%),
+        linear-gradient(135deg, #07111f 0%, #0d0b16 54%, #110911 100%);
+      color: var(--ink);
+      font-family: var(--font);
+    }
+
+    .deck {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      perspective: 1600px;
+    }
+
+    .stage {
+      position: relative;
+      width: min(100vw, 177.7777vh);
+      height: min(56.25vw, 100vh);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .10);
+      background: linear-gradient(145deg, rgba(10, 15, 24, .96), rgba(12, 10, 20, .98));
+      box-shadow: var(--shadow);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 4.4rem 5rem;
+      opacity: 0;
+      transform: translateZ(-260px) rotateY(16deg) scale(.86);
+      transition: opacity .64s ease, transform .72s cubic-bezier(.2, .8, .2, 1), filter .64s ease;
+      pointer-events: none;
+      filter: blur(8px);
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateZ(0) rotateY(0) scale(1);
+      pointer-events: auto;
+      filter: blur(0);
+    }
+
+    .slide.prev {
+      opacity: 0;
+      transform: translateX(-8%) translateZ(-360px) rotateY(-20deg) scale(.82);
+    }
+
+    .title-kicker {
+      color: var(--cyan);
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      max-width: 960px;
+      margin-top: 1rem;
+      font-size: clamp(4rem, 7vw, 7.4rem);
+      line-height: .9;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: clamp(2.4rem, 4vw, 4rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      font-size: 1.35rem;
+      font-weight: 850;
+      color: #ffffff;
+    }
+
+    .subhead {
+      margin-top: 1.6rem;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.35rem;
+      line-height: 1.65;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    .panel {
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(18, 29, 48, .78), rgba(11, 18, 30, .62));
+      box-shadow: 0 18px 46px rgba(0, 0, 0, .24), inset 0 1px 0 rgba(255, 255, 255, .06);
+      backdrop-filter: blur(16px);
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: .98rem;
+      line-height: 1.55;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      width: fit-content;
+      padding: .38rem .74rem;
+      border: 1px solid rgba(255, 255, 255, .13);
+      border-radius: 999px;
+      color: #d8f8ff;
+      background: rgba(255, 255, 255, .06);
+      font-size: .82rem;
+      font-weight: 760;
+    }
+
+    .hero-orb {
+      position: absolute;
+      right: 3.5rem;
+      bottom: 2.4rem;
+      width: 45%;
+      max-width: 720px;
+      opacity: .9;
+      transform-style: preserve-3d;
+      animation: hoverOrb 7s ease-in-out infinite;
+    }
+
+    @keyframes hoverOrb {
+      0%, 100% { transform: translate3d(0, 0, 0) rotateZ(0deg); }
+      50% { transform: translate3d(0, -18px, 40px) rotateZ(1.5deg); }
+    }
+
+    .macro-layout {
+      grid-template-columns: 1.2fr .8fr;
+      height: calc(100% - 6rem);
+      margin-top: 2rem;
+      align-items: stretch;
+    }
+
+    .layer-stack {
+      padding: 1.2rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: .9rem;
+    }
+
+    .layer {
+      position: relative;
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 1rem;
+      align-items: center;
+      min-height: 76px;
+      padding: 1rem 1.1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.045);
+      transform: translateY(18px);
+      opacity: .32;
+      transition: transform .45s ease, opacity .45s ease, border-color .45s ease, background .45s ease;
+    }
+
+    .slide.active .layer { transform: translateY(0); opacity: .95; }
+    .slide.active .layer:nth-child(2) { transition-delay: .08s; }
+    .slide.active .layer:nth-child(3) { transition-delay: .16s; }
+    .slide.active .layer:nth-child(4) { transition-delay: .24s; }
+    .slide.active .layer:nth-child(5) { transition-delay: .32s; }
+    .slide.active .layer:nth-child(6) { transition-delay: .40s; }
+
+    .layer b {
+      color: #fff;
+      font-size: 1.1rem;
+    }
+
+    .layer span {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .flow-card {
+      padding: 1.15rem;
+      display: grid;
+      gap: .9rem;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: .8rem;
+      align-items: start;
+      padding: .8rem;
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .num {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      color: #08101d;
+      font-weight: 900;
+    }
+
+    .dependency-grid {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 2rem;
+      height: calc(100% - 6rem);
+    }
+
+    .rule-panel {
+      padding: 1.4rem;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 1rem;
+      overflow: hidden;
+    }
+
+    .rule-list {
+      display: grid;
+      gap: .72rem;
+      align-content: start;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.45;
+    }
+
+    .rule {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .72rem .82rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .045);
+    }
+
+    .ok { color: var(--mint); }
+    .no { color: var(--rose); }
+
+    .data-layout {
+      grid-template-columns: .92fr 1.08fr;
+      height: calc(100% - 5.6rem);
+      margin-top: 1.8rem;
+    }
+
+    .bento {
+      padding: 1.2rem;
+      display: grid;
+      gap: .9rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mini {
+      padding: 1rem;
+      border-radius: 18px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.09);
+    }
+
+    .mini p {
+      margin-top: .55rem;
+      color: var(--muted);
+      font-size: .94rem;
+      line-height: 1.5;
+    }
+
+    .sandbox {
+      margin-top: 1.8rem;
+      height: calc(100% - 5.4rem);
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 1.2rem;
+      align-items: stretch;
+    }
+
+    .control {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 1.1rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--cyan);
+    }
+
+    .step-list {
+      display: grid;
+      gap: .75rem;
+      align-content: start;
+    }
+
+    .step-item {
+      padding: .9rem 1rem;
+      border-radius: 15px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.045);
+      color: var(--muted);
+      transition: .25s ease;
+    }
+
+    .step-item.hot {
+      color: #fff;
+      border-color: rgba(95, 242, 255, .42);
+      background: rgba(95, 242, 255, .11);
+      box-shadow: 0 0 28px rgba(95,242,255,.16);
+    }
+
+    .nav {
+      position: absolute;
+      right: 1.2rem;
+      bottom: 1.1rem;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .45rem .62rem;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      background: rgba(7, 12, 22, .55);
+      backdrop-filter: blur(16px);
+      opacity: .25;
+      transition: opacity .2s ease;
+    }
+
+    .nav:hover { opacity: 1; }
+    .nav button {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      color: var(--ink);
+      background: rgba(255,255,255,.08);
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    .progress {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: var(--progress, 20%);
+      background: linear-gradient(90deg, var(--cyan), var(--rose), var(--amber));
+      box-shadow: 0 0 18px rgba(95, 242, 255, .45);
+      transition: width .35s ease;
+    }
+
+    .step-target {
+      opacity: .25;
+      transform: translateY(12px);
+      transition: opacity .36s ease, transform .36s ease, filter .36s ease;
+      filter: saturate(.7);
+    }
+
+    .step-target.on {
+      opacity: 1;
+      transform: translateY(0);
+      filter: saturate(1.2);
+    }
+
+    .draw-path {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+    }
+
+    .slide.active .draw-path {
+      animation: draw 1.35s ease forwards;
+    }
+
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+
+    @media print {
+      html, body {
+        overflow: visible;
+        background: #fff;
+        color: #111;
+      }
+      .deck, .stage {
+        position: static;
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 0;
+        box-shadow: none;
+        background: #fff;
+      }
+      .slide, .slide.active, .slide.prev {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 56.25vw;
+        opacity: 1;
+        transform: none;
+        filter: none;
+        page-break-after: always;
+        color: #111;
+        background: #fff;
+      }
+      .nav, .progress { display: none; }
+      .panel, .mini, .layer, .flow-row, .rule { box-shadow: none; background: #f6f8fb; color: #111; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="neon" x="-70%" y="-70%" width="240%" height="240%">
+        <feGaussianBlur stdDeviation="4" result="blur1"></feGaussianBlur>
+        <feGaussianBlur stdDeviation="12" result="blur2"></feGaussianBlur>
+        <feMerge>
+          <feMergeNode in="blur2"></feMergeNode>
+          <feMergeNode in="blur1"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+      <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity=".35"></feDropShadow>
+      </filter>
+      <linearGradient id="g-cyan" x1="0" x2="1" y1="0" y2="1">
+        <stop stop-color="#5ff2ff"></stop>
+        <stop offset="1" stop-color="#a98bff"></stop>
+      </linearGradient>
+      <linearGradient id="g-hot" x1="0" x2="1" y1="0" y2="1">
+        <stop stop-color="#ff7ca8"></stop>
+        <stop offset="1" stop-color="#ffd166"></stop>
+      </linearGradient>
+      <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+        <path d="M2 2 L10 6 L2 10 Z" fill="#5ff2ff"></path>
+      </marker>
+      <symbol id="node" viewBox="0 0 180 74">
+        <rect x="1" y="1" width="178" height="72" rx="18" fill="rgba(255,255,255,.065)" stroke="rgba(255,255,255,.18)"></rect>
+      </symbol>
+    </defs>
+  </svg>
+
+  <main class="deck">
+    <section class="stage" id="stage">
+      <article class="slide active" data-slide="0">
+        <div class="title-kicker">SVG Deck Master / Raby v0.1</div>
+        <h1>本地优先的兔兔档案架构</h1>
+        <p class="subhead">Flutter 移动端以 feature 为用户入口，Riverpod 组织状态与命令，Domain 保持纯 Dart，Drift/SQLite 与媒体文件留在 Data 层。</p>
+        <div style="margin-top:2.1rem;display:flex;gap:.75rem;flex-wrap:wrap">
+          <span class="pill">Flutter</span>
+          <span class="pill">Riverpod</span>
+          <span class="pill">go_router</span>
+          <span class="pill">Drift + SQLite</span>
+          <span class="pill">Local-first</span>
+        </div>
+        <svg class="hero-orb" viewBox="0 0 760 520">
+          <g filter="url(#neon)">
+            <circle cx="380" cy="260" r="190" fill="none" stroke="url(#g-cyan)" stroke-width="2" opacity=".9"></circle>
+            <circle cx="380" cy="260" r="128" fill="none" stroke="#ff7ca8" stroke-width="1.6" opacity=".65"></circle>
+            <path d="M190 260 C260 120 500 120 570 260 C500 400 260 400 190 260Z" fill="rgba(95,242,255,.06)" stroke="url(#g-cyan)" stroke-width="3"></path>
+            <path class="draw-path" d="M150 260 H286 C324 260 332 210 380 210 C428 210 436 260 474 260 H610" fill="none" stroke="#5ff2ff" stroke-width="5" stroke-linecap="round"></path>
+            <path d="M346 178 C332 136 348 104 386 92 C424 104 440 136 426 178" fill="rgba(255,255,255,.05)" stroke="#a98bff" stroke-width="3"></path>
+            <circle cx="342" cy="256" r="13" fill="#ffd166"></circle>
+            <circle cx="418" cy="256" r="13" fill="#ffd166"></circle>
+          </g>
+        </svg>
+      </article>
+
+      <article class="slide" data-slide="1">
+        <div class="title-kicker">Macro View</div>
+        <h2>代码依赖从用户动作一路收敛到本地存储</h2>
+        <div class="grid macro-layout">
+          <div class="panel layer-stack">
+            <div class="layer">
+              <b>Presentation</b>
+              <span>页面、表单、列表、图表与反馈。路径集中在 features/*/presentation 与 shared/widgets。</span>
+            </div>
+            <div class="layer">
+              <b>Application</b>
+              <span>Riverpod Provider/Controller，负责异步状态、表单命令、UUID/Clock、媒体草稿。</span>
+            </div>
+            <div class="layer">
+              <b>Domain</b>
+              <span>Rabbit、Diary、Tag、WeightRecord、Repository 接口与业务异常，保持纯 Dart。</span>
+            </div>
+            <div class="layer">
+              <b>App Assembly</b>
+              <span>MaterialApp.router、go_router、主题、Repository Provider 与数据库实例装配。</span>
+            </div>
+            <div class="layer">
+              <b>Data</b>
+              <span>Drift 表/DAO、Repository 实现、row 与 domain mapper、媒体文件路径解析。</span>
+            </div>
+            <div class="layer">
+              <b>Storage</b>
+              <span>SQLite 私有库 raby.db 与 App 私有目录 media/diaries、media/rabbits。</span>
+            </div>
+          </div>
+          <div class="panel flow-card">
+            <h3>当前已经落地的主链路</h3>
+            <div class="flow-row step-target" data-step="0"><div class="num">1</div><div><b>启动</b><p class="small">seed 系统标签，读取默认兔，决定 onboarding 或进入记录页。</p></div></div>
+            <div class="flow-row step-target" data-step="1"><div class="num">2</div><div><b>建档</b><p class="small">Rabbit 表单经 controller 校验，写入 DriftRabbitRepository。</p></div></div>
+            <div class="flow-row step-target" data-step="2"><div class="num">3</div><div><b>日记</b><p class="small">内容、照片、标签经 DiaryEditorController 聚合，事务写入 diary bundle。</p></div></div>
+            <div class="flow-row step-target" data-step="3"><div class="num">4</div><div><b>体重</b><p class="small">StreamProvider 持续输出记录和图表数据，UI 只看 Domain。</p></div></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-slide="2">
+        <div class="title-kicker">Boundary Rules</div>
+        <h2>依赖边界是这套架构的价值核心</h2>
+        <div class="grid dependency-grid">
+          <div class="panel rule-panel">
+            <h3 class="ok">允许的方向</h3>
+            <div class="rule-list">
+              <div class="rule"><span class="ok">●</span> app 装配 router、theme、repository providers。</div>
+              <div class="rule"><span class="ok">●</span> features/presentation 只依赖 application、shared、router。</div>
+              <div class="rule"><span class="ok">●</span> features/application 调用 domain repository 接口。</div>
+              <div class="rule"><span class="ok">●</span> data 实现 repository，负责 Drift row 与 Domain 转换。</div>
+              <div class="rule"><span class="ok">●</span> shared 只承载跨页面复用 UI 和 theme token。</div>
+            </div>
+          </div>
+          <div class="panel rule-panel">
+            <h3 class="no">禁止的穿透</h3>
+            <div class="rule-list">
+              <div class="rule"><span class="no">●</span> domain 不能 import Flutter、Riverpod、Drift 或 data。</div>
+              <div class="rule"><span class="no">●</span> presentation 不能直接 import DAO、Table、Companion。</div>
+              <div class="rule"><span class="no">●</span> Drift row 不能穿透到页面、表单或 Domain 接口。</div>
+              <div class="rule"><span class="no">●</span> Repository 不处理导航，保存成功由页面响应状态。</div>
+              <div class="rule"><span class="no">●</span> data 不依赖 features，避免功能层倒灌。</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-slide="3">
+        <div class="title-kicker">Data Core</div>
+        <h2>SQLite 里保存事实，私有目录保存媒体</h2>
+        <div class="grid data-layout">
+          <div class="panel bento">
+            <div class="mini">
+              <h3>rabbits</h3>
+              <p>默认兔、头像相对路径、建档资料；软删除会级联标记相关日记、标签、体重。</p>
+            </div>
+            <div class="mini">
+              <h3>diaries</h3>
+              <p>按 rabbit_id 与 recorded_at 组成时间线核心索引。</p>
+            </div>
+            <div class="mini">
+              <h3>diary_media</h3>
+              <p>只存相对路径和排序，文件位于 App 私有目录。</p>
+            </div>
+            <div class="mini">
+              <h3>tags / diary_tags</h3>
+              <p>系统标签 seed，自定义标签按兔归属，多对多连接日记。</p>
+            </div>
+            <div class="mini">
+              <h3>weight_records</h3>
+              <p>按兔和日期输出列表及 fl_chart 图表数据。</p>
+            </div>
+            <div class="mini">
+              <h3>schemaVersion 1</h3>
+              <p>建库创建索引，beforeOpen 打开外键约束。</p>
+            </div>
+          </div>
+          <svg class="panel" viewBox="0 0 720 520" style="width:100%;height:100%;padding:1rem">
+            <rect x="36" y="42" width="190" height="76" rx="18" fill="rgba(124,255,191,.10)" stroke="#7cffbf"></rect>
+            <text x="64" y="88" fill="#fff" font-size="24" font-weight="800">rabbits</text>
+            <rect x="276" y="42" width="190" height="76" rx="18" fill="rgba(95,242,255,.10)" stroke="#5ff2ff"></rect>
+            <text x="304" y="88" fill="#fff" font-size="24" font-weight="800">diaries</text>
+            <rect x="506" y="42" width="170" height="76" rx="18" fill="rgba(169,139,255,.10)" stroke="#a98bff"></rect>
+            <text x="532" y="88" fill="#fff" font-size="24" font-weight="800">media</text>
+            <rect x="276" y="190" width="190" height="76" rx="18" fill="rgba(255,209,102,.10)" stroke="#ffd166"></rect>
+            <text x="316" y="236" fill="#fff" font-size="24" font-weight="800">tags</text>
+            <rect x="506" y="190" width="170" height="76" rx="18" fill="rgba(255,124,168,.10)" stroke="#ff7ca8"></rect>
+            <text x="522" y="236" fill="#fff" font-size="24" font-weight="800">diary_tags</text>
+            <rect x="36" y="334" width="190" height="76" rx="18" fill="rgba(95,242,255,.08)" stroke="#5ff2ff"></rect>
+            <text x="58" y="380" fill="#fff" font-size="24" font-weight="800">weight</text>
+            <rect x="276" y="334" width="400" height="76" rx="18" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.18)"></rect>
+            <text x="304" y="380" fill="#fff" font-size="24" font-weight="800">App documents / raby.db</text>
+            <g fill="none" stroke="#5ff2ff" stroke-width="3" marker-end="url(#arrow)" filter="url(#neon)">
+              <path class="draw-path" d="M226 80 H276"></path>
+              <path class="draw-path" d="M466 80 H506"></path>
+              <path class="draw-path" d="M371 118 V190"></path>
+              <path class="draw-path" d="M466 228 H506"></path>
+              <path class="draw-path" d="M131 118 V334"></path>
+              <path class="draw-path" d="M226 372 H276"></path>
+              <path class="draw-path" d="M371 266 V334"></path>
+              <path class="draw-path" d="M591 266 V334"></path>
+            </g>
+          </svg>
+        </div>
+      </article>
+
+      <article class="slide" data-slide="4">
+        <div class="title-kicker">Simulation View</div>
+        <h2>拖动滑块，看“保存一条日记”的路径</h2>
+        <div class="sandbox">
+          <svg class="panel" viewBox="0 0 760 520" style="width:100%;height:100%;padding:1rem">
+            <g id="saveNodes" font-family="system-ui, -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif">
+              <g transform="translate(42 72)" data-flow="0"><use href="#node"></use><text x="28" y="43" fill="#fff" font-size="22" font-weight="800">DiaryEditPage</text></g>
+              <g transform="translate(292 72)" data-flow="1"><use href="#node"></use><text x="23" y="43" fill="#fff" font-size="22" font-weight="800">Controller</text></g>
+              <g transform="translate(542 72)" data-flow="2"><use href="#node"></use><text x="30" y="43" fill="#fff" font-size="22" font-weight="800">Domain</text></g>
+              <g transform="translate(167 250)" data-flow="3"><use href="#node"></use><text x="24" y="43" fill="#fff" font-size="22" font-weight="800">Media copy</text></g>
+              <g transform="translate(417 250)" data-flow="4"><use href="#node"></use><text x="18" y="43" fill="#fff" font-size="22" font-weight="800">Repository</text></g>
+              <g transform="translate(292 404)" data-flow="5"><use href="#node"></use><text x="30" y="43" fill="#fff" font-size="22" font-weight="800">Drift txn</text></g>
+            </g>
+            <g id="saveLines" fill="none" stroke="#5ff2ff" stroke-width="4" marker-end="url(#arrow)" filter="url(#neon)">
+              <path data-flow-line="1" d="M222 109 H292"></path>
+              <path data-flow-line="2" d="M472 109 H542"></path>
+              <path data-flow-line="3" d="M382 146 C360 196 300 212 257 250"></path>
+              <path data-flow-line="4" d="M347 287 H417"></path>
+              <path data-flow-line="5" d="M507 324 C482 374 428 390 382 404"></path>
+            </g>
+          </svg>
+          <div class="panel control">
+            <div>
+              <h3>命令链路</h3>
+              <p class="small" style="margin-top:.5rem">UI 不碰 Drift。媒体先复制到相对路径，随后一次事务写入日记、媒体、标签连接；失败时清理已复制文件。</p>
+            </div>
+            <input id="flowRange" type="range" min="0" max="5" value="0" aria-label="保存流程步骤">
+            <div class="step-list">
+              <div class="step-item hot" data-copy-step="0">1. 页面收集正文、标签、照片草稿</div>
+              <div class="step-item" data-copy-step="1">2. Controller 校验内容与照片数量</div>
+              <div class="step-item" data-copy-step="2">3. 生成 Domain Diary / DiaryMedia</div>
+              <div class="step-item" data-copy-step="3">4. MediaStorageService 复制私有文件</div>
+              <div class="step-item" data-copy-step="4">5. Repository 接口隐藏 Drift 细节</div>
+              <div class="step-item" data-copy-step="5">6. Drift 事务写入并保持 row 不外泄</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <div class="nav" aria-label="幻灯片导航">
+        <button id="prev" type="button" aria-label="上一页">‹</button>
+        <span class="small" id="pageText">1 / 5</span>
+        <button id="next" type="button" aria-label="下一页">›</button>
+      </div>
+      <div class="progress" id="progress"></div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const pageText = document.getElementById('pageText');
+      const stage = document.getElementById('stage');
+      let index = 0;
+      let step = 0;
+      const maxSteps = [0, 3, 0, 0, 0];
+
+      function updateSteps() {
+        const slide = slides[index];
+        slide.querySelectorAll('.step-target').forEach((el) => {
+          const needed = Number(el.dataset.step || 0);
+          el.classList.toggle('on', needed <= step);
+        });
+      }
+
+      function render() {
+        slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === index);
+          slide.classList.toggle('prev', i < index);
+        });
+        updateSteps();
+        pageText.textContent = `${index + 1} / ${slides.length}`;
+        stage.style.setProperty('--progress', `${((index + 1) / slides.length) * 100}%`);
+      }
+
+      function next() {
+        if (step < maxSteps[index]) {
+          step += 1;
+          updateSteps();
+          return;
+        }
+        if (index < slides.length - 1) {
+          index += 1;
+          step = 0;
+          render();
+        }
+      }
+
+      function prev() {
+        if (step > 0) {
+          step -= 1;
+          updateSteps();
+          return;
+        }
+        if (index > 0) {
+          index -= 1;
+          step = maxSteps[index];
+          render();
+        }
+      }
+
+      document.getElementById('next').addEventListener('click', next);
+      document.getElementById('prev').addEventListener('click', prev);
+      window.addEventListener('keydown', (event) => {
+        if (['ArrowRight', ' ', 'PageDown'].includes(event.key)) {
+          event.preventDefault();
+          next();
+        }
+        if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+          event.preventDefault();
+          prev();
+        }
+      });
+
+      const range = document.getElementById('flowRange');
+      const flowNodes = Array.from(document.querySelectorAll('[data-flow]'));
+      const flowLines = Array.from(document.querySelectorAll('[data-flow-line]'));
+      const copySteps = Array.from(document.querySelectorAll('[data-copy-step]'));
+      function renderFlow() {
+        const value = Number(range.value);
+        flowNodes.forEach((el) => {
+          const hot = Number(el.dataset.flow) <= value;
+          el.style.opacity = hot ? '1' : '.22';
+          el.style.filter = hot ? 'url(#neon)' : 'none';
+        });
+        flowLines.forEach((el) => {
+          const hot = Number(el.dataset.flowLine) <= value;
+          el.style.opacity = hot ? '1' : '.12';
+        });
+        copySteps.forEach((el) => {
+          el.classList.toggle('hot', Number(el.dataset.copyStep) === value);
+        });
+      }
+      range.addEventListener('input', renderFlow);
+      renderFlow();
+      render();
+    })();
+  </script>
+</body>
+</html>

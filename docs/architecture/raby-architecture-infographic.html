@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raby 架构信息图</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      background: #070914;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .canvas {
+      width: 1600px;
+      height: 900px;
+      overflow: hidden;
+      color: #eef7ff;
+      background:
+        radial-gradient(circle at 10% 12%, rgba(95, 242, 255, .26), transparent 28%),
+        radial-gradient(circle at 84% 16%, rgba(255, 124, 168, .19), transparent 26%),
+        linear-gradient(135deg, #091424 0%, #121325 48%, #160d18 100%);
+      padding: 34px;
+      display: grid;
+      grid-template-rows: 96px 1fr 68px;
+      gap: 18px;
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+    }
+
+    .kicker {
+      margin: 0 0 10px;
+      color: #5ff2ff;
+      font-size: 16px;
+      font-weight: 850;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 54px;
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .summary {
+      width: 468px;
+      color: #abc0d6;
+      font-size: 18px;
+      line-height: 1.55;
+      text-align: right;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr 374px;
+      grid-template-rows: 330px 284px;
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .card {
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(19, 31, 50, .78), rgba(10, 16, 28, .68));
+      box-shadow: 0 22px 60px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.08);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .wide { grid-column: 2; grid-row: 1 / span 2; }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    p {
+      margin: 0;
+      color: #a9bbcf;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .chips {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      padding: 8px 12px;
+      color: #dffcff;
+      font-size: 15px;
+      font-weight: 760;
+    }
+
+    .layer-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .layer-item {
+      display: grid;
+      grid-template-columns: 104px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .label {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .note {
+      color: #a9bbcf;
+      font-size: 13.5px;
+      line-height: 1.28;
+    }
+
+    .topology {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .feature {
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .feature strong {
+      color: #fff;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .feature span {
+      color: #a9bbcf;
+      font-size: 13px;
+      line-height: 1.28;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(4, 44px);
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .flow-step {
+      padding: 6px 10px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 4px 6px;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .flow-step .badge { grid-row: 1 / span 2; }
+    .flow-step h3 {
+      grid-column: 2;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .flow-step p {
+      grid-column: 2;
+      font-size: 12.5px;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: #08101d;
+      background: linear-gradient(135deg, #5ff2ff, #a98bff);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .rule-box {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rule-box ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #a9bbcf;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    .metric {
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 18px;
+      background: rgba(255,255,255,.055);
+      padding: 12px 16px;
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .metric b {
+      color: #fff;
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .metric span {
+      color: #a9bbcf;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .accent-cyan { color: #5ff2ff; }
+    .accent-mint { color: #7cffbf; }
+    .accent-rose { color: #ff7ca8; }
+    .accent-amber { color: #ffd166; }
+  </style>
+</head>
+<body>
+  <main class="canvas">
+    <header class="header">
+      <div>
+        <p class="kicker">Raby v0.1 Architecture / Local-first Flutter</p>
+        <h1>兔兔档案应用架构总览</h1>
+      </div>
+      <p class="summary">Presentation 只处理界面，Application 组织状态和命令，Domain 表达业务，Data 隔离 Drift/SQLite 与媒体文件。</p>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>分层职责</h2>
+        <div class="layer-list">
+          <div class="layer-item"><span class="label accent-cyan">app</span><span class="note">路由、主题、Provider 装配、启动壳</span></div>
+          <div class="layer-item"><span class="label accent-mint">features</span><span class="note">页面、表单、Controller、局部异步状态</span></div>
+          <div class="layer-item"><span class="label accent-amber">domain</span><span class="note">实体、枚举、Repository 接口、业务异常</span></div>
+          <div class="layer-item"><span class="label accent-rose">data</span><span class="note">Drift DAO、Repository 实现、mapper、媒体存储</span></div>
+        </div>
+        <div class="chips">
+          <span class="chip">Flutter</span>
+          <span class="chip">Riverpod</span>
+          <span class="chip">go_router</span>
+          <span class="chip">Drift</span>
+          <span class="chip">SQLite</span>
+        </div>
+      </article>
+
+      <article class="card wide">
+        <h2>主架构拓扑</h2>
+        <svg class="topology" viewBox="0 0 760 620" role="img" aria-label="Raby architecture topology">
+          <defs>
+            <linearGradient id="blue" x1="0" x2="1" y1="0" y2="1">
+              <stop stop-color="#5ff2ff"></stop>
+              <stop offset="1" stop-color="#a98bff"></stop>
+            </linearGradient>
+            <linearGradient id="hot" x1="0" x2="1" y1="0" y2="1">
+              <stop stop-color="#ff7ca8"></stop>
+              <stop offset="1" stop-color="#ffd166"></stop>
+            </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="5" result="b"></feGaussianBlur>
+              <feMerge>
+                <feMergeNode in="b"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+            <marker id="arrow2" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+              <path d="M1 1 L9 5.5 L1 10 Z" fill="#5ff2ff"></path>
+            </marker>
+          </defs>
+
+          <rect x="32" y="36" width="696" height="548" rx="30" fill="rgba(255,255,255,.025)" stroke="rgba(255,255,255,.11)"></rect>
+
+          <g font-family="system-ui, -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif">
+            <rect x="86" y="74" width="588" height="78" rx="24" fill="rgba(95,242,255,.10)" stroke="#5ff2ff"></rect>
+            <text x="128" y="122" fill="#fff" font-size="24" font-weight="850">features/*/presentation</text>
+            <text x="450" y="121" fill="#9fb6cc" font-size="17">页面、组件、表单、图表</text>
+
+            <rect x="86" y="190" width="588" height="78" rx="24" fill="rgba(124,255,191,.09)" stroke="#7cffbf"></rect>
+            <text x="128" y="238" fill="#fff" font-size="24" font-weight="850">features/*/application</text>
+            <text x="450" y="237" fill="#9fb6cc" font-size="17">Provider / Controller / Async 状态</text>
+
+            <rect x="86" y="306" width="258" height="78" rx="24" fill="rgba(255,209,102,.10)" stroke="#ffd166"></rect>
+            <text x="128" y="354" fill="#fff" font-size="24" font-weight="850">domain</text>
+            <text x="224" y="353" fill="#9fb6cc" font-size="17">纯 Dart</text>
+
+            <rect x="416" y="306" width="258" height="78" rx="24" fill="rgba(169,139,255,.10)" stroke="#a98bff"></rect>
+            <text x="452" y="354" fill="#fff" font-size="24" font-weight="850">app/providers</text>
+
+            <rect x="86" y="422" width="258" height="78" rx="24" fill="rgba(255,124,168,.10)" stroke="#ff7ca8"></rect>
+            <text x="124" y="470" fill="#fff" font-size="24" font-weight="850">data/repositories</text>
+
+            <rect x="416" y="422" width="258" height="78" rx="24" fill="rgba(95,242,255,.07)" stroke="#5ff2ff"></rect>
+            <text x="452" y="470" fill="#fff" font-size="24" font-weight="850">Drift DAO / Tables</text>
+
+            <rect x="86" y="532" width="258" height="42" rx="16" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.16)"></rect>
+            <text x="128" y="559" fill="#d5e7f6" font-size="18" font-weight="780">SQLite: raby.db</text>
+
+            <rect x="416" y="532" width="258" height="42" rx="16" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.16)"></rect>
+            <text x="452" y="559" fill="#d5e7f6" font-size="18" font-weight="780">Media: relative paths</text>
+          </g>
+
+          <g fill="none" stroke="#5ff2ff" stroke-width="4" marker-end="url(#arrow2)" filter="url(#glow)">
+            <path d="M380 152 V190"></path>
+            <path d="M300 268 C270 282 238 292 216 306"></path>
+            <path d="M460 268 C490 282 522 292 544 306"></path>
+            <path d="M544 384 C512 400 454 414 344 438"></path>
+            <path d="M344 460 H416"></path>
+            <path d="M216 500 V532"></path>
+            <path d="M544 500 V532"></path>
+          </g>
+          <g fill="none" stroke="#ff7ca8" stroke-width="3" stroke-dasharray="8 10" marker-end="url(#arrow2)">
+            <path d="M216 422 C220 392 220 388 216 384"></path>
+          </g>
+        </svg>
+      </article>
+
+      <article class="card">
+        <h2>已落地 Feature</h2>
+        <div class="feature-grid">
+          <div class="feature"><strong>Startup</strong><span>seed 标签，判断默认兔，路由到建档或记录</span></div>
+          <div class="feature"><strong>Rabbits</strong><span>建档、详情、编辑、头像路径管理</span></div>
+          <div class="feature"><strong>Records</strong><span>日记时间线、编辑、照片网格、标签选择</span></div>
+          <div class="feature"><strong>Weight</strong><span>体重列表、编辑、图表 StreamProvider</span></div>
+          <div class="feature"><strong>Profile</strong><span>兔兔资料与入口聚合</span></div>
+          <div class="feature"><strong>Settings</strong><span>设置页与二级路由入口</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>保存日记链路</h2>
+        <div class="flow">
+          <div class="flow-step"><span class="badge">1</span><h3>收集输入</h3><p>正文、时间、标签、照片草稿。</p></div>
+          <div class="flow-step"><span class="badge">2</span><h3>校验命令</h3><p>至少正文或照片，最多 9 张图。</p></div>
+          <div class="flow-step"><span class="badge">3</span><h3>复制媒体</h3><p>落到私有目录，保存相对路径。</p></div>
+          <div class="flow-step"><span class="badge">4</span><h3>事务写入</h3><p>日记、媒体、标签连接一次提交。</p></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>数据模型核心</h2>
+        <svg viewBox="0 0 326 188" role="img" aria-label="Raby data model">
+          <defs>
+            <marker id="arrow3" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+              <path d="M1 1 L8 5 L1 9 Z" fill="#ffd166"></path>
+            </marker>
+          </defs>
+          <g font-family="system-ui, -apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif" font-size="14" font-weight="800">
+            <rect x="10" y="12" width="86" height="42" rx="13" fill="rgba(124,255,191,.11)" stroke="#7cffbf"></rect>
+            <text x="29" y="39" fill="#fff">rabbits</text>
+            <rect x="126" y="12" width="86" height="42" rx="13" fill="rgba(95,242,255,.10)" stroke="#5ff2ff"></rect>
+            <text x="146" y="39" fill="#fff">diaries</text>
+            <rect x="236" y="12" width="80" height="42" rx="13" fill="rgba(169,139,255,.10)" stroke="#a98bff"></rect>
+            <text x="252" y="39" fill="#fff">media</text>
+            <rect x="126" y="78" width="86" height="42" rx="13" fill="rgba(255,209,102,.10)" stroke="#ffd166"></rect>
+            <text x="153" y="105" fill="#fff">tags</text>
+            <rect x="236" y="78" width="80" height="42" rx="13" fill="rgba(255,124,168,.10)" stroke="#ff7ca8"></rect>
+            <text x="244" y="105" fill="#fff">links</text>
+            <rect x="10" y="136" width="86" height="42" rx="13" fill="rgba(95,242,255,.08)" stroke="#5ff2ff"></rect>
+            <text x="26" y="163" fill="#fff">weight</text>
+          </g>
+          <g fill="none" stroke="#ffd166" stroke-width="2.5" marker-end="url(#arrow3)">
+            <path d="M96 33 H126"></path>
+            <path d="M212 33 H236"></path>
+            <path d="M169 54 V78"></path>
+            <path d="M212 99 H236"></path>
+            <path d="M53 54 V136"></path>
+          </g>
+        </svg>
+        <p>所有表都有 updated_at / deleted_at 语义，查询默认过滤软删除。媒体文件不进库，只保存相对路径。</p>
+      </article>
+
+      <article class="card">
+        <h2>依赖规则</h2>
+        <div class="rules">
+          <div class="rule-box">
+            <h3 class="accent-mint">推荐</h3>
+            <ul>
+              <li>UI → Application</li>
+              <li>Application → Domain</li>
+              <li>App Providers → Data 实现</li>
+              <li>Data → Domain mapper</li>
+            </ul>
+          </div>
+          <div class="rule-box">
+            <h3 class="accent-rose">禁止</h3>
+            <ul>
+              <li>Domain import Flutter/Drift</li>
+              <li>Presentation import DAO/Table</li>
+              <li>Data import features</li>
+              <li>Drift row 穿透 UI</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <div class="metric"><b>6</b><span>核心数据表：rabbits、diaries、media、tags、links、weight</span></div>
+      <div class="metric"><b>4</b><span>Repository 接口：Rabbit、Diary、Tag、Weight，UI 只看领域能力</span></div>
+      <div class="metric"><b>3</b><span>一级 Tab：记录、体重、我的；二级页面由 go_router 管理</span></div>
+    </footer>
+  </main>
+</body>
+</html>

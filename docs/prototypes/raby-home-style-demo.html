@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Raby Home Style Demo</title>
+  <style>
+    :root {
+      --primary: #2f6f64;
+      --primary-ink: #ffffff;
+      --secondary: #92400e;
+      --accent: #6366f1;
+      --bg: #fafaf7;
+      --paper: #fdfbf7;
+      --surface: #ffffff;
+      --surface-soft: #eef3f0;
+      --surface-warm: #fff7ed;
+      --border: #dde7e2;
+      --border-warm: #f1e8e2;
+      --ink: #17211d;
+      --muted: #64748b;
+      --danger: #dc2626;
+      --shadow-soft: 0 10px 28px rgba(23, 33, 29, 0.08);
+      --shadow-clay: 0 12px 0 rgba(47, 111, 100, 0.10);
+      --radius-card: 18px;
+      --radius-control: 16px;
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(47, 111, 100, 0.12), transparent 28%),
+        radial-gradient(circle at 84% 0%, rgba(146, 64, 14, 0.10), transparent 24%),
+        #e8eee9;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .phone {
+      width: min(390px, 100vw);
+      height: min(844px, 100vh);
+      background: var(--bg);
+      border: 1px solid rgba(23, 33, 29, 0.12);
+      border-radius: 34px;
+      overflow: hidden;
+      box-shadow: 0 28px 70px rgba(23, 33, 29, 0.28);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app {
+      flex: 1;
+      overflow: auto;
+      padding: 18px 16px 18px;
+      scrollbar-width: none;
+    }
+
+    .app::-webkit-scrollbar {
+      display: none;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 48px;
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: var(--surface);
+      border: 2px solid var(--ink);
+      box-shadow: 4px 4px 0 rgba(47, 111, 100, 0.18);
+      transform: rotate(-2deg);
+    }
+
+    .logo-mark svg {
+      width: 25px;
+      height: 25px;
+      stroke: var(--primary);
+      stroke-width: 2.3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 800;
+    }
+
+    .brand-subtitle {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .icon-button {
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .icon-button svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hero-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 104px;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, #ffffff 0%, #f2f8f5 100%);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-clay);
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -40px -70px auto;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: rgba(47, 111, 100, 0.08);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--surface-warm);
+      color: var(--secondary);
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #fed7aa;
+    }
+
+    .eyebrow svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hero-title {
+      margin: 14px 0 8px;
+      font-size: 26px;
+      line-height: 1.12;
+      letter-spacing: 0;
+      font-weight: 850;
+    }
+
+    .hero-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .rabbit-portrait {
+      position: relative;
+      z-index: 1;
+      align-self: center;
+      width: 104px;
+      height: 120px;
+      border-radius: 30px;
+      background: #fdfbf7;
+      border: 2px solid var(--ink);
+      box-shadow: 6px 6px 0 rgba(146, 64, 14, 0.16);
+      display: grid;
+      place-items: center;
+      transform: rotate(2deg);
+    }
+
+    .rabbit-portrait svg {
+      width: 76px;
+      height: 88px;
+      stroke: var(--ink);
+      stroke-width: 2.4;
+      fill: #ffffff;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .action {
+      min-height: 86px;
+      padding: 14px;
+      border: 0;
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      text-align: left;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .action.primary {
+      background: var(--primary);
+      color: var(--primary-ink);
+    }
+
+    .action.secondary {
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .action-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .secondary .action-icon {
+      background: var(--surface-soft);
+      color: var(--primary);
+    }
+
+    .action svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .action-label {
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 22px 2px 10px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .section-link {
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .diary-card {
+      padding: 14px;
+    }
+
+    .diary-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .chip.warm {
+      background: var(--surface-warm);
+      color: var(--secondary);
+    }
+
+    .diary-text {
+      margin: 0 0 12px;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 8px;
+      min-height: 130px;
+    }
+
+    .photo-main,
+    .photo-stack > div {
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, rgba(47, 111, 100, 0.25), rgba(99, 102, 241, 0.15)),
+        #edf4f1;
+      border: 1px solid rgba(47, 111, 100, 0.14);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .photo-main::after,
+    .photo-stack > div::after {
+      content: "";
+      position: absolute;
+      inset: auto 12px 12px auto;
+      width: 34px;
+      height: 22px;
+      border-radius: 50% 50% 45% 45%;
+      border: 2px solid rgba(23, 33, 29, 0.22);
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .photo-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat-card {
+      padding: 14px;
+      min-height: 124px;
+    }
+
+    .stat-label {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .stat-note {
+      margin: 4px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chart {
+      width: 100%;
+      height: 46px;
+    }
+
+    .progress-card {
+      margin-top: 12px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: var(--paper);
+      border-color: var(--border-warm);
+    }
+
+    .progress-title {
+      margin: 0 0 3px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .progress-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .progress-badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 19px;
+      background: #ffffff;
+      border: 2px dashed rgba(146, 64, 14, 0.44);
+      color: var(--secondary);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 850;
+      transform: rotate(2deg);
+    }
+
+    .bottom-nav {
+      margin: 0 14px 14px;
+      min-height: 68px;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(221, 231, 226, 0.95);
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(23, 33, 29, 0.14);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-item {
+      min-height: 52px;
+      border: 0;
+      border-radius: 18px;
+      background: transparent;
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .nav-item.active {
+      background: var(--surface-soft);
+      color: var(--primary);
+    }
+
+    .nav-item svg {
+      width: 21px;
+      height: 21px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .sketch-line {
+      position: absolute;
+      left: 21px;
+      top: 99px;
+      width: 66px;
+      height: 14px;
+      border-bottom: 2px solid rgba(146, 64, 14, 0.28);
+      border-radius: 50%;
+      transform: rotate(-6deg);
+    }
+
+    @media (max-width: 420px) {
+      body {
+        display: block;
+        background: var(--bg);
+      }
+
+      .phone {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        border: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" aria-label="Raby 首页样式演示">
+    <div class="app">
+      <div class="top-bar">
+        <div class="brand">
+          <div class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M8.4 9.6C6.8 6.6 7 3.5 8.7 2.7c1.4-.7 3.3 1.2 4 4.6" />
+              <path d="M14 8c.4-3.5 2.4-5.7 4-5.1 1.8.7 2.1 4.4.5 7.6" />
+              <path d="M5.7 14.1c0-3.5 2.8-6.1 6.4-6.1s6.4 2.6 6.4 6.1c0 3.7-2.9 6.4-6.4 6.4s-6.4-2.7-6.4-6.4Z" />
+              <path d="M9.3 15.1h.1M14.7 15.1h.1M11.2 17c.6.4 1 .4 1.6 0" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">Raby</h1>
+            <div class="brand-subtitle">兔子档案</div>
+          </div>
+        </div>
+        <button class="icon-button" aria-label="打开通知">
+          <svg viewBox="0 0 24 24">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+            <path d="M10 21h4" />
+          </svg>
+        </button>
+      </div>
+
+      <section class="hero-card" aria-label="当前兔子概览">
+        <span class="sketch-line" aria-hidden="true"></span>
+        <div class="hero-content">
+          <span class="eyebrow">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v18M5 8h14M7 16h10" />
+            </svg>
+            今日小档案
+          </span>
+          <h2 class="hero-title">栗子今天也被认真记录了</h2>
+          <p class="hero-copy">最近一次体重记录是 980g，生活日记保持 6 天连续。</p>
+        </div>
+        <div class="rabbit-portrait" aria-hidden="true">
+          <svg viewBox="0 0 72 88">
+            <path d="M25 33C17 15 18 5 24 4c5-.8 11 11 10 24" />
+            <path d="M43 31c.4-18 7-29 12-26 6 3 2 18-7 33" />
+            <path d="M13 52c0-17 13-30 30-30 14 0 24 11 24 27 0 18-13 31-32 31-13 0-22-11-22-28Z" />
+            <path d="M27 55h.1M48 55h.1M34 63c3 2 6 2 9 0" />
+          </svg>
+        </div>
+      </section>
+
+      <div class="quick-actions" aria-label="快速操作">
+        <button class="action primary">
+          <span class="action-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
+          <span class="action-label">写生活日记</span>
+        </button>
+        <button class="action secondary">
+          <span class="action-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 17h18" />
+              <path d="M7 17l3-8 4 5 3-9 3 12" />
+            </svg>
+          </span>
+          <span class="action-label">记录体重</span>
+        </button>
+      </div>
+
+      <section aria-label="最近记录">
+        <div class="section-head">
+          <h2 class="section-title">最近记录</h2>
+          <a class="section-link" href="#">全部</a>
+        </div>
+        <article class="card diary-card">
+          <div class="diary-meta">
+            <span class="date">今天 09:32</span>
+            <div class="chip-row">
+              <span class="chip warm">里程碑</span>
+              <span class="chip">晒太阳</span>
+            </div>
+          </div>
+          <p class="diary-text">早上精神很好，自己跑到窗边晒了一会儿太阳。新草饼接受度不错，先少量观察。</p>
+          <div class="photo-grid" aria-hidden="true">
+            <div class="photo-main"></div>
+            <div class="photo-stack">
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section aria-label="今日概览">
+        <div class="section-head">
+          <h2 class="section-title">今日概览</h2>
+          <a class="section-link" href="#">查看体重</a>
+        </div>
+        <div class="stats-grid">
+          <article class="card stat-card">
+            <p class="stat-label">当前体重</p>
+            <p class="stat-value">980g</p>
+            <p class="stat-note">较上次 +12g</p>
+            <svg class="chart" viewBox="0 0 120 46" aria-hidden="true">
+              <path d="M4 36 C20 30, 28 31, 38 24 S58 18, 70 22 S92 30, 116 12" fill="none" stroke="#2f6f64" stroke-width="4" stroke-linecap="round" />
+              <path d="M4 36 C20 30, 28 31, 38 24 S58 18, 70 22 S92 30, 116 12 L116 46 L4 46Z" fill="rgba(47,111,100,0.10)" />
+            </svg>
+          </article>
+          <article class="card stat-card">
+            <p class="stat-label">连续记录</p>
+            <p class="stat-value">6天</p>
+            <p class="stat-note">生活记录保持中</p>
+            <div class="chip-row" aria-hidden="true">
+              <span class="chip">一</span>
+              <span class="chip">二</span>
+              <span class="chip">三</span>
+              <span class="chip">四</span>
+            </div>
+          </article>
+        </div>
+        <article class="card progress-card">
+          <div>
+            <p class="progress-title">本周已经记录 4 次</p>
+            <p class="progress-desc">继续保持轻量记录，回看时会很有用。</p>
+          </div>
+          <div class="progress-badge">4/7</div>
+        </article>
+      </section>
+    </div>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 5h16M4 12h16M4 19h10" />
+        </svg>
+        记录
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 18h16" />
+          <path d="M7 18l3-8 4 5 3-10 3 13" />
+        </svg>
+        体重
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </svg>
+        我的
+      </button>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "app": "Raby",
+  "version": {
+    "display": "v0.1.0",
+    "pubspec": "0.1.0+1",
+    "androidVersionName": "0.1.0",
+    "androidVersionCode": 2001
+  },
+  "generatedAt": "2026-07-08T09:10:00+08:00",
+  "artifacts": {
+    "apk": {
+      "path": "dist\\apk\\raby-v0.1.0-arm64-release-20260708-090404.apk",
+      "sizeBytes": 21450980,
+      "sha256": "99A41A6CD283C24C32DD08AAFF18BA96CEE352654A9501E11A55CD988BF1DCDF"
+    },
+    "sha256File": "dist\\apk\\raby-v0.1.0-arm64-release-20260708-090404.apk.sha256",
+    "acceptanceBundle": {
+      "path": "dist\\raby-v0.1.0-acceptance-bundle-20260708-0438.zip",
+      "sha256File": "dist\\raby-v0.1.0-acceptance-bundle-20260708-0438.zip.sha256"
+    },
+    "handoff": "docs\\prototypes\\raby-v0.1.0-acceptance-handoff.md",
+    "requirementAudit": "docs\\prototypes\\raby-v0.1.0-requirement-audit.md",
+    "screenshotContactSheet": "docs\\prototypes\\screenshots\\raby-contact-sheet.png",
+    "samplePhotoCredits": "tooling\\screenshot_harness\\assets\\PHOTO_CREDITS.md",
+    "adbInstallSmokeScreenshot": "docs\\prototypes\\screenshots\\raby-adb-install-smoke.png"
+  },
+  "screenshots": {
+    "count": 14,
+    "pages": [
+      "raby-home.png",
+      "raby-home-empty.png",
+      "raby-weight.png",
+      "raby-weight-empty.png",
+      "raby-weight-edit.png",
+      "raby-diary-edit.png",
+      "raby-diary-detail.png",
+      "raby-search.png",
+      "raby-album.png",
+      "raby-photo-viewer.png",
+      "raby-profile.png",
+      "raby-settings.png",
+      "raby-onboarding.png",
+      "raby-rabbit-detail.png"
+    ]
+  },
+  "verification": {
+    "analyze": "passed",
+    "tests": {
+      "status": "passed",
+      "count": 48
+    },
+    "releaseBuild": "passed",
+    "acceptanceArtifactCheck": "passed"
+  }
+}
+
+
