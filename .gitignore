@@ -58,3 +58,10 @@ app.*.map.json
 /output/
 iflytek_docx_*
 yf_docx_page_cli.png
+
+# Local Android emulator and input-method debugging artifacts
+/*.apk
+/*.js
+/*.png
+/*.xml
+/trime-assets/
