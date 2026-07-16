@@ -928,7 +928,17 @@ void main() {
     await _pumpRoute(tester);
 
     expect(find.text('照片相册'), findsOneWidget);
-    expect(find.text('1 张生活照片'), findsOneWidget);
+    expect(find.text('1 张照片'), findsOneWidget);
+    expect(find.byKey(const ValueKey('album-filter-all')), findsOneWidget);
+    expect(find.byKey(const ValueKey('raby-tab-我的')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('album-filter-daily')));
+    await tester.pumpAndSettle();
+    expect(find.text('这个分类还没有照片'), findsOneWidget);
+
+    await tester.tap(find.text('查看全部'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('查看照片 1 · 2026-06-09'), findsOneWidget);
 
     await tester.tap(find.byTooltip('查看照片 1 · 2026-06-09'));
     await _pumpRoute(tester);
