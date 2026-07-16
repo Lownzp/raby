@@ -404,7 +404,7 @@ void main() {
         ),
         _weight(
           id: 'weight-old',
-          recordedAt: DateTime.utc(2026, 3, 1, 12),
+          recordedAt: DateTime.utc(2026, 3, 15, 12),
           grams: 1240,
         ),
         _weight(
@@ -436,7 +436,7 @@ void main() {
 
     expect(find.text('至少2条'), findsOneWidget);
 
-    await tester.tap(find.text('1年'));
+    await tester.tap(find.text('90天'));
     await tester.pumpAndSettle();
 
     expect(find.text('3次称重'), findsOneWidget);
@@ -472,7 +472,10 @@ void main() {
     await _tapBottomNav(tester, '体重');
 
     expect(find.text('10次称重'), findsOneWidget);
-    expect(find.text('10条'), findsOneWidget);
+    expect(find.text('共 10 条记录'), findsOneWidget);
+    expect(find.text('最高'), findsOneWidget);
+    expect(find.text('最低'), findsOneWidget);
+    expect(find.text('平均'), findsOneWidget);
     expect(find.text('至少2条'), findsNothing);
   });
 

@@ -11,6 +11,7 @@ import '../../../app/theme/raby_tokens.dart';
 import '../../../domain/models/rabbit.dart';
 import '../../../domain/models/weight_record.dart';
 import '../../../shared/widgets/raby_card.dart';
+import '../../../shared/widgets/raby_image_slot.dart';
 import '../../../shared/widgets/raby_page.dart';
 import '../../../shared/widgets/raby_sketch_icon.dart';
 import '../../../shared/widgets/raby_state_card.dart';
@@ -34,7 +35,7 @@ class WeightPage extends ConsumerWidget {
       title: '体重趋势',
       centerTitle: true,
       trailing: RabyIconBubble(
-        icon: RabyIconKind.add,
+        icon: RabyIconKind.calendar,
         tooltip: rabbit == null ? '建立兔兔档案' : '新增体重',
         onTap: rabbit == null
             ? () => context.go(AppRoutes.onboardingRabbit)
@@ -151,12 +152,16 @@ class _WeightContentState extends ConsumerState<_WeightContent> {
           orElse: () => _ascending(records),
         );
         final rangedChartRecords = _selectedRange.filter(chartRecords);
-        final rangedAnalysisRecords = _descending(rangedChartRecords);
         if (records.isEmpty) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _WeightSummaryCard(records: records, rabbit: widget.rabbit),
+              _WeightSummaryCard(
+                records: records,
+                analysisRecords: const [],
+                rabbit: widget.rabbit,
+                range: _selectedRange,
+              ),
               const SizedBox(height: RabySpacing.md),
               _WeightEmptyCard(onCreate: widget.onCreate),
               const SizedBox(height: RabySpacing.md),
@@ -167,7 +172,12 @@ class _WeightContentState extends ConsumerState<_WeightContent> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _WeightSummaryCard(records: records, rabbit: widget.rabbit),
+            _WeightSummaryCard(
+              records: records,
+              analysisRecords: rangedChartRecords,
+              rabbit: widget.rabbit,
+              range: _selectedRange,
+            ),
             const SizedBox(height: RabySpacing.md),
             _RangeSelector(
               selected: _selectedRange,
@@ -176,7 +186,10 @@ class _WeightContentState extends ConsumerState<_WeightContent> {
             const SizedBox(height: RabySpacing.md),
             _WeightChartCard(records: rangedChartRecords),
             const SizedBox(height: RabySpacing.md),
-            _WeightAnalysisCard(records: rangedAnalysisRecords),
+            _WeightAnalysisCard(
+              records: rangedChartRecords,
+              range: _selectedRange,
+            ),
             const SizedBox(height: RabySpacing.md),
             _WeightHistorySection(
               records: records,
@@ -207,71 +220,102 @@ class _WeightContentState extends ConsumerState<_WeightContent> {
 }
 
 class _WeightSummaryCard extends StatelessWidget {
-  const _WeightSummaryCard({required this.records, required this.rabbit});
+  const _WeightSummaryCard({
+    required this.records,
+    required this.analysisRecords,
+    required this.rabbit,
+    required this.range,
+  });
 
   final List<WeightRecord> records;
+  final List<WeightRecord> analysisRecords;
   final Rabbit rabbit;
+  final _WeightRange range;
 
   @override
   Widget build(BuildContext context) {
     final latest = records.isEmpty ? null : records.first;
-    final previous = records.length > 1 ? records[1] : null;
-    final delta = latest == null || previous == null
+    final rangeDelta = analysisRecords.length < 2
         ? null
-        : latest.weightGrams - previous.weightGrams;
+        : analysisRecords.last.weightGrams - analysisRecords.first.weightGrams;
 
     return RabyCard(
-      radius: RabyRadius.hero,
-      softShadow: true,
-      gradient: const LinearGradient(
-        colors: [RabyColors.surfaceWarm, RabyColors.paper],
-      ),
+      radius: RabyRadius.lg,
+      color: RabyColors.surfaceSoft,
+      borderColor: RabyColors.borderWarm,
       child: Row(
         children: [
-          RabbitAvatar(
-            avatarPath: rabbit.avatarPath,
-            size: 68,
-            iconSize: 36,
-            borderWidth: 4,
-            borderColor: RabyColors.stickerBorder,
-          ),
+          if (rabbit.avatarPath == null || rabbit.avatarPath!.isEmpty)
+            const RabyImageSlot(
+              width: 68,
+              height: 68,
+              radius: RabyRadius.md,
+              semanticLabel: '待替换兔兔头像',
+            )
+          else
+            RabbitAvatar(
+              avatarPath: rabbit.avatarPath,
+              size: 68,
+              iconSize: 36,
+              borderWidth: 3,
+              borderColor: RabyColors.stickerBorder,
+            ),
           const SizedBox(width: RabySpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  latest == null ? '暂无体重数据' : _formatGrams(latest.weightGrams),
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  rabbit.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFamily: 'RabyChillRoundM',
+                  ),
                 ),
-                const SizedBox(height: RabySpacing.xs),
+                const SizedBox(height: 2),
+                if (latest == null)
+                  Text('暂无体重数据', style: Theme.of(context).textTheme.titleLarge)
+                else
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${latest.weightGrams}',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        TextSpan(
+                          text: ' g',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 2),
                 Text(
                   latest == null
                       ? '${rabbit.name} 还没有称重记录。'
-                      : '${_formatDate(latest.recordedAt)} · ${_deltaText(delta)}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: RabyColors.secondary),
+                      : _rangeSummary(
+                          range,
+                          analysisRecords.length,
+                          rangeDelta,
+                        ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: RabyColors.textSecondary,
+                  ),
                 ),
               ],
             ),
           ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: RabyColors.surfaceWarm,
-              borderRadius: BorderRadius.circular(RabyRadius.pill),
-              border: Border.all(color: RabyColors.borderWarm),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Text(
-                '${records.length}条',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: RabyColors.primaryDeep,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
+          const SizedBox(width: RabySpacing.sm),
+          const RabyImageSlot(
+            width: 54,
+            height: 54,
+            radius: RabyRadius.md,
+            placeholderColor: RabyColors.surfaceWarm,
+            semanticLabel: '待替换体重秤插图',
           ),
         ],
       ),
@@ -287,13 +331,7 @@ class _WeightChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RabyCard(
-      radius: RabyRadius.hero,
-      softShadow: true,
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [RabyColors.paper, RabyColors.surfaceWarm],
-      ),
+      radius: RabyRadius.lg,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -301,55 +339,53 @@ class _WeightChartCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '趋势',
+                  '体重趋势 (g)',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: RabyColors.secondary,
-                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
-              Text(
-                records.length < 2 ? '至少2条' : '${records.length}次称重',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: RabyColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 22,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: RabyColors.chartLine,
+                      borderRadius: BorderRadius.circular(RabyRadius.pill),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    records.length < 2 ? '至少2条' : '${records.length}次称重',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: RabyColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: RabySpacing.md),
+          const SizedBox(height: RabySpacing.ms),
           SizedBox(
-            height: 230,
+            height: 220,
             child: records.length < 2
-                ? const Center(child: RabyMutedText('记录两次体重后,这里会显示趋势线。'))
-                : LineChart(_chartData(records)),
+                ? const Center(child: RabyMutedText('记录两次体重后，这里会显示趋势线。'))
+                : LineChart(_chartData(context, records)),
           ),
           if (records.length >= 2) ...[
-            const SizedBox(height: RabySpacing.sm),
-            Row(
-              children: [
-                Text(
-                  _formatDate(records.first.recordedAt),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: RabyColors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  _formatDate(records.last.recordedAt),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: RabyColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(height: RabySpacing.ms),
+            const Divider(height: 1),
+            const SizedBox(height: RabySpacing.ms),
+            _WeightStats(records: records),
           ],
         ],
       ),
     );
   }
 
-  LineChartData _chartData(List<WeightRecord> records) {
+  LineChartData _chartData(BuildContext context, List<WeightRecord> records) {
     final spots = [
       for (var i = 0; i < records.length; i += 1)
         FlSpot(i.toDouble(), records[i].weightGrams.toDouble()),
@@ -360,20 +396,99 @@ class _WeightChartCard extends StatelessWidget {
     final span = maxWeight - minWeight;
     final padding = span == 0
         ? math.max(maxWeight * 0.04, 30).toDouble()
-        : math.max(span * 0.22, 30).toDouble();
+        : math.max(span * 0.18, 20).toDouble();
+    final rawInterval = math.max(span / 4, 20).toDouble();
+    final verticalInterval = (rawInterval / 10).ceil() * 10.0;
+    final minY = math
+        .max(
+          0,
+          ((minWeight - padding) / verticalInterval).floor() * verticalInterval,
+        )
+        .toDouble();
+    final maxY =
+        ((maxWeight + padding) / verticalInterval).ceil() * verticalInterval;
+    final horizontalInterval = records.length <= 4
+        ? 1.0
+        : (records.length - 1) / 3;
+    final axisStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: RabyColors.textSecondary,
+      fontSize: 10,
+    );
 
     return LineChartData(
       minX: 0,
       maxX: (records.length - 1).toDouble(),
-      minY: math.max(0, minWeight - padding).toDouble(),
-      maxY: maxWeight + padding,
-      lineTouchData: const LineTouchData(enabled: true),
+      minY: minY,
+      maxY: maxY,
+      clipData: const FlClipData.none(),
+      lineTouchData: LineTouchData(
+        enabled: true,
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipColor: (_) => RabyColors.surfaceSoft,
+          tooltipBorder: const BorderSide(color: RabyColors.borderWarm),
+          tooltipBorderRadius: BorderRadius.circular(RabyRadius.sm),
+          fitInsideHorizontally: true,
+          fitInsideVertically: true,
+          getTooltipItems: (spots) => [
+            for (final spot in spots)
+              LineTooltipItem(
+                '${spot.y.round()}g',
+                const TextStyle(
+                  color: RabyColors.secondary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
+              ),
+          ],
+        ),
+      ),
       gridData: FlGridData(
         drawVerticalLine: false,
+        horizontalInterval: verticalInterval,
         getDrawingHorizontalLine: (_) =>
             const FlLine(color: RabyColors.border, strokeWidth: 1),
       ),
-      titlesData: const FlTitlesData(show: false),
+      titlesData: FlTitlesData(
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 38,
+            interval: verticalInterval,
+            getTitlesWidget: (value, meta) => SideTitleWidget(
+              meta: meta,
+              space: 6,
+              child: Text('${value.round()}', style: axisStyle),
+            ),
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 26,
+            interval: horizontalInterval,
+            getTitlesWidget: (value, meta) {
+              final index = value.round();
+              if (index < 0 ||
+                  index >= records.length ||
+                  (value - index).abs() > 0.01) {
+                return const SizedBox.shrink();
+              }
+              return SideTitleWidget(
+                meta: meta,
+                space: 7,
+                child: Text(
+                  _formatMonthDay(records[index].recordedAt),
+                  style: axisStyle,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
       borderData: FlBorderData(show: false),
       lineBarsData: [
         LineChartBarData(
@@ -381,13 +496,111 @@ class _WeightChartCard extends StatelessWidget {
           isCurved: true,
           curveSmoothness: 0.28,
           color: RabyColors.primary,
-          barWidth: 4,
+          barWidth: 3,
           isStrokeCapRound: true,
-          dotData: FlDotData(show: records.length <= 10),
+          dotData: FlDotData(
+            show: records.length <= 16,
+            getDotPainter: (spot, percent, barData, index) =>
+                FlDotCirclePainter(
+                  radius: index == records.length - 1 ? 5 : 3,
+                  color: RabyColors.surface,
+                  strokeWidth: 2,
+                  strokeColor: RabyColors.chartLine,
+                ),
+          ),
           belowBarData: BarAreaData(
             show: true,
-            color: RabyColors.primary.withValues(alpha: 0.16),
+            color: RabyColors.primary.withValues(alpha: 0.14),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeightStats extends StatelessWidget {
+  const _WeightStats({required this.records});
+
+  final List<WeightRecord> records;
+
+  @override
+  Widget build(BuildContext context) {
+    final highest = records.reduce(
+      (current, record) =>
+          record.weightGrams > current.weightGrams ? record : current,
+    );
+    final lowest = records.reduce(
+      (current, record) =>
+          record.weightGrams < current.weightGrams ? record : current,
+    );
+    final average =
+        records.fold<int>(0, (sum, record) => sum + record.weightGrams) ~/
+        records.length;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _WeightMetric(
+            label: '最高',
+            value: '${highest.weightGrams}g',
+            caption: _formatMonthDay(highest.recordedAt),
+          ),
+        ),
+        const SizedBox(height: 54, child: VerticalDivider(width: 1)),
+        Expanded(
+          child: _WeightMetric(
+            label: '最低',
+            value: '${lowest.weightGrams}g',
+            caption: _formatMonthDay(lowest.recordedAt),
+          ),
+        ),
+        const SizedBox(height: 54, child: VerticalDivider(width: 1)),
+        Expanded(
+          child: _WeightMetric(
+            label: '平均',
+            value: '${average}g',
+            caption: '${records.length} 条记录',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeightMetric extends StatelessWidget {
+  const _WeightMetric({
+    required this.label,
+    required this.value,
+    required this.caption,
+  });
+
+  final String label;
+  final String value;
+  final String caption;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium?.copyWith(color: RabyColors.textSecondary),
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(value, style: Theme.of(context).textTheme.titleMedium),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          caption,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: RabyColors.textSecondary),
         ),
       ],
     );
@@ -402,63 +615,42 @@ class _RangeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RabyCard(
-      padding: const EdgeInsets.all(6),
-      radius: RabyRadius.pill,
-      softShadow: true,
-      child: Row(
-        children: [
-          for (final range in _WeightRange.values)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: selected == range,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(RabyRadius.pill),
-                  onTap: () => onChanged(range),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: selected == range
-                          ? RabyColors.surfaceWarm
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(RabyRadius.pill),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(
-                        range.label,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: RabyColors.secondary,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+    return SegmentedButton<_WeightRange>(
+      segments: [
+        for (final range in _WeightRange.values)
+          ButtonSegment(
+            value: range,
+            label: Text(
+              range.label,
+              style: const TextStyle(fontFamily: 'RabyChillRoundF'),
             ),
-        ],
-      ),
+          ),
+      ],
+      selected: {selected},
+      showSelectedIcon: false,
+      expandedInsets: EdgeInsets.zero,
+      onSelectionChanged: (values) => onChanged(values.single),
     );
   }
 }
 
 class _WeightAnalysisCard extends StatelessWidget {
-  const _WeightAnalysisCard({required this.records});
+  const _WeightAnalysisCard({required this.records, required this.range});
 
   final List<WeightRecord> records;
+  final _WeightRange range;
 
   @override
   Widget build(BuildContext context) {
     final delta = records.length > 1
-        ? records.first.weightGrams - records.last.weightGrams
+        ? records.last.weightGrams - records.first.weightGrams
         : 0;
     final sign = delta > 0 ? '+' : '';
-    final tone = delta.abs() <= 80 ? '整体变化平稳' : '变化较明显';
+    final tone = delta.abs() <= 80 ? '变化平缓' : '变化明显';
 
     return RabyCard(
-      softShadow: true,
+      color: RabyColors.surfaceSoft,
+      borderColor: RabyColors.borderWarm,
       child: Row(
         children: [
           const RabySticker(icon: RabyIconKind.chart, size: 52),
@@ -472,7 +664,7 @@ class _WeightAnalysisCard extends StatelessWidget {
                 Text(
                   records.length < 2
                       ? '记录两次后生成分析'
-                      : '本周期 $sign${delta}g · $tone',
+                      : '${range.analysisLabel} $sign${delta}g',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -486,10 +678,10 @@ class _WeightAnalysisCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               child: Text(
-                '健康范围',
+                records.length < 2 ? '继续记录' : tone,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: RabyColors.success,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
@@ -519,22 +711,48 @@ class _WeightHistorySection extends StatelessWidget {
       return _WeightEmptyCard(onCreate: onCreate);
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(2, 2, 2, 10),
-          child: Text('记录明细', style: Theme.of(context).textTheme.titleMedium),
-        ),
-        for (var i = 0; i < records.length; i += 1) ...[
-          _WeightRecordTile(
-            record: records[i],
-            onEdit: () => onEdit(records[i]),
-            onDelete: () => onDelete(records[i]),
+    return RabyCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              RabySpacing.md,
+              RabySpacing.md,
+              RabySpacing.md,
+              RabySpacing.ms,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '记录明细',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                Text(
+                  '共 ${records.length} 条记录',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: RabyColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
-          if (i != records.length - 1) const SizedBox(height: RabySpacing.sm),
+          const Divider(height: 1),
+          for (var i = 0; i < records.length; i += 1) ...[
+            _WeightRecordTile(
+              record: records[i],
+              delta: i == records.length - 1
+                  ? null
+                  : records[i].weightGrams - records[i + 1].weightGrams,
+              onEdit: () => onEdit(records[i]),
+              onDelete: () => onDelete(records[i]),
+            ),
+            if (i != records.length - 1) const Divider(height: 1),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -542,58 +760,76 @@ class _WeightHistorySection extends StatelessWidget {
 class _WeightRecordTile extends StatelessWidget {
   const _WeightRecordTile({
     required this.record,
+    required this.delta,
     required this.onEdit,
     required this.onDelete,
   });
 
   final WeightRecord record;
+  final int? delta;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return RabyCard(
-      padding: EdgeInsets.zero,
-      softShadow: true,
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: onEdit,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+          padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
           child: Row(
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: RabyColors.surfaceSoft,
-                  borderRadius: BorderRadius.circular(RabyRadius.md),
-                ),
-                child: const SizedBox.square(
-                  dimension: 42,
-                  child: Center(
-                    child: RabySketchIcon(
-                      kind: RabyIconKind.weight,
-                      size: 22,
-                      color: RabyColors.primary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: RabySpacing.md),
-              Expanded(
+              SizedBox(
+                width: 62,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _formatGrams(record.weightGrams),
-                      style: Theme.of(context).textTheme.titleSmall,
+                      _formatMonthDay(record.recordedAt),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    Text(
+                      '${record.recordedAt.toLocal().year}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: RabyColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: RabySpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          _formatGrams(record.weightGrams),
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(width: RabySpacing.sm),
+                        Text(
+                          _compactDelta(delta),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: delta == null
+                                    ? RabyColors.textSecondary
+                                    : RabyColors.accent,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       record.note == null || record.note!.trim().isEmpty
-                          ? _formatDate(record.recordedAt)
-                          : '${_formatDate(record.recordedAt)} · ${record.note!.trim()}',
-                      maxLines: 2,
+                          ? '没有备注'
+                          : record.note!.trim(),
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: RabyColors.textSecondary,
                       ),
                     ),
@@ -623,6 +859,7 @@ class _WeightRecordTile extends StatelessWidget {
                   ),
                 ],
                 icon: const RabySketchIcon(kind: RabyIconKind.more),
+                padding: EdgeInsets.zero,
               ),
             ],
           ),
@@ -642,7 +879,7 @@ class _WeightEmptyCard extends StatelessWidget {
     return RabyStateCard(
       icon: RabyIconKind.weight,
       title: '还没有体重记录',
-      message: '先记录一次称重,后续就能看到趋势变化。',
+      message: '先记录一次称重，后续就能看到趋势变化。',
       actionLabel: '记录第一次体重',
       actionIcon: RabyIconKind.add,
       tone: RabyStateTone.warm,
@@ -657,13 +894,8 @@ class _WeightFirstRecordTipsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RabyCard(
-      softShadow: true,
+      color: RabyColors.surfaceSoft,
       borderColor: RabyColors.borderWarm,
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [RabyColors.paper, RabyColors.surfaceWarm],
-      ),
       child: Row(
         children: [
           const RabySticker(icon: RabyIconKind.chart, size: 52),
@@ -675,7 +907,7 @@ class _WeightFirstRecordTipsCard extends StatelessWidget {
                 Text('趋势会自动生成', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  '记录两次以上体重后,这里会显示变化曲线和稳定性分析。',
+                  '记录两次以上体重后，这里会显示变化曲线和稳定性分析。',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: RabyColors.textSecondary,
                   ),
@@ -713,13 +945,20 @@ enum _WeightRecordAction { edit, delete }
 enum _WeightRange {
   week('7天', 7),
   month('30天', 30),
-  year('1年', 365),
+  quarter('90天', 90),
   all('全部', null);
 
   const _WeightRange(this.label, this.days);
 
   final String label;
   final int? days;
+
+  String get analysisLabel => switch (this) {
+    _WeightRange.week => '近7天',
+    _WeightRange.month => '近30天',
+    _WeightRange.quarter => '近90天',
+    _WeightRange.all => '全部记录',
+  };
 
   List<WeightRecord> filter(List<WeightRecord> records) {
     final days = this.days;
@@ -738,26 +977,31 @@ List<WeightRecord> _ascending(List<WeightRecord> records) {
   return [...records]..sort((a, b) => a.recordedAt.compareTo(b.recordedAt));
 }
 
-List<WeightRecord> _descending(List<WeightRecord> records) {
-  return [...records]..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
-}
-
 String _formatGrams(int grams) => '$grams g';
 
-String _formatDate(DateTime date) {
+String _formatMonthDay(DateTime date) {
   final local = date.toLocal();
-  final month = local.month.toString().padLeft(2, '0');
-  final day = local.day.toString().padLeft(2, '0');
-  return '${local.year}-$month-$day';
+  return '${local.month}/${local.day}';
 }
 
-String _deltaText(int? delta) {
+String _compactDelta(int? delta) {
   if (delta == null) {
-    return '第一条记录';
+    return '首条';
   }
   if (delta == 0) {
-    return '与上次持平';
+    return '持平';
   }
   final sign = delta > 0 ? '+' : '';
-  return '$sign${delta}g 较上次';
+  return '$sign${delta}g';
+}
+
+String _rangeSummary(_WeightRange range, int recordCount, int? delta) {
+  if (recordCount < 2 || delta == null) {
+    return '${range.analysisLabel}记录不足';
+  }
+  if (delta.abs() <= 80) {
+    return '${range.analysisLabel}变化平缓';
+  }
+  final sign = delta > 0 ? '+' : '';
+  return '${range.analysisLabel} $sign${delta}g';
 }
