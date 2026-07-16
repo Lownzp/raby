@@ -34,6 +34,7 @@ void main() {
             adoptedDate: '',
             breed: '垂耳兔',
             furColor: '奶油白',
+            initialWeightGrams: 1820,
             avatarLocalPath: source.path,
           ),
         );
@@ -42,6 +43,7 @@ void main() {
     expect(created.avatarPath, isNotNull);
     expect(created.avatarPath, startsWith('media/rabbits/'));
     expect(created.avatarPath, endsWith('.png'));
+    expect(created.initialWeightGrams, 1820);
     expect(mediaStorage.copied.single.sourcePath, source.path);
     expect(mediaStorage.copied.single.relativePath, created.avatarPath);
   });

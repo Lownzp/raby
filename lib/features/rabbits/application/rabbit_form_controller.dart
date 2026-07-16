@@ -15,6 +15,7 @@ class RabbitFormInput {
     required this.adoptedDate,
     required this.breed,
     required this.furColor,
+    required this.initialWeightGrams,
     this.avatarPath,
     this.avatarLocalPath,
   });
@@ -25,6 +26,7 @@ class RabbitFormInput {
   final String adoptedDate;
   final String breed;
   final String furColor;
+  final int? initialWeightGrams;
   final String? avatarPath;
   final String? avatarLocalPath;
 }
@@ -59,6 +61,7 @@ class RabbitFormController {
         breed: input.breed.trim(),
         furColor: input.furColor.trim(),
         avatarPath: avatarPath,
+        initialWeightGrams: input.initialWeightGrams,
         createdAt: now,
         updatedAt: now,
       );
@@ -96,7 +99,7 @@ class RabbitFormController {
         neuteredStatus: existing.neuteredStatus,
         neuteredDate: existing.neuteredDate,
         chipNumber: existing.chipNumber,
-        initialWeightGrams: existing.initialWeightGrams,
+        initialWeightGrams: input.initialWeightGrams,
         personalityTags: existing.personalityTags,
         favoriteFoods: existing.favoriteFoods,
         favoriteToys: existing.favoriteToys,

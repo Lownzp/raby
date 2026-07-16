@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_routes.dart';
-import '../../../app/theme/raby_colors.dart';
 import '../../../app/theme/raby_tokens.dart';
-import '../../../shared/widgets/raby_card.dart';
-import '../../../shared/widgets/raby_sketch_icon.dart';
-import '../../../shared/widgets/raby_page.dart';
+import '../../../shared/widgets/raby_image_slot.dart';
 import 'widgets/rabbit_form.dart';
 
 class RabbitOnboardingPage extends StatelessWidget {
@@ -27,44 +24,38 @@ class RabbitOnboardingPage extends StatelessWidget {
               ),
               sliver: SliverList.list(
                 children: [
-                  RabyCard(
-                    radius: RabyRadius.hero,
-                    softShadow: true,
-                    gradient: const LinearGradient(
-                      colors: [RabyColors.surfaceWarm, RabyColors.paper],
-                    ),
-                    child: Row(
-                      children: [
-                        const RabySticker(
-                          icon: RabyIconKind.rabbit,
-                          size: 62,
-                          background: RabyColors.surface,
-                          foreground: RabyColors.secondary,
-                        ),
-                        const SizedBox(width: RabySpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '建立第一只兔兔档案',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(color: RabyColors.secondary),
-                              ),
-                              const SizedBox(height: RabySpacing.xs),
-                              const RabyMutedText(
-                                '先填几个核心信息,后面每天的记录都会自动归到这只兔兔名下。',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  Column(
+                    children: [
+                      Text(
+                        '创建宠物档案',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: RabySpacing.sm),
+                      Text(
+                        '让我们先认识一下你的兔兔吧。',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: RabySpacing.md),
+                      const RabyImageSlot(
+                        aspectRatio: 4 / 3,
+                        radius: RabyRadius.lg,
+                        semanticLabel: '待替换建档主视觉',
+                      ),
+                    ],
                   ),
                   const SizedBox(height: RabySpacing.lg),
                   RabbitForm(
                     submitLabel: '完成建档',
                     onSaved: () => context.go(AppRoutes.records),
+                  ),
+                  const SizedBox(height: RabySpacing.sm),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => context.go(AppRoutes.records),
+                      child: const Text('稍后再说'),
+                    ),
                   ),
                 ],
               ),

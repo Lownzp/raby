@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers/repository_providers.dart';
@@ -7,6 +8,7 @@ import '../../../../app/theme/raby_tokens.dart';
 import '../../../../domain/models/rabbit.dart';
 import '../../../../domain/models/raby_enums.dart';
 import '../../../../shared/widgets/raby_card.dart';
+import '../../../../shared/widgets/raby_image_slot.dart';
 import '../../../../shared/widgets/raby_sketch_icon.dart';
 import '../../../../shared/widgets/rabbit_avatar.dart';
 import '../../application/rabbit_avatar_picker_service.dart';
@@ -35,6 +37,7 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
   late final TextEditingController _adoptedDateController;
   late final TextEditingController _breedController;
   late final TextEditingController _furColorController;
+  late final TextEditingController _initialWeightController;
   late RabbitSex _sex;
   late String? _avatarPath;
   String? _avatarLocalPath;
@@ -51,6 +54,9 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
     );
     _breedController = TextEditingController(text: rabbit?.breed ?? '');
     _furColorController = TextEditingController(text: rabbit?.furColor ?? '');
+    _initialWeightController = TextEditingController(
+      text: rabbit?.initialWeightGrams?.toString() ?? '',
+    );
     _sex = rabbit?.sex ?? RabbitSex.unknown;
     _avatarPath = rabbit?.avatarPath;
   }
@@ -62,6 +68,7 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
     _adoptedDateController.dispose();
     _breedController.dispose();
     _furColorController.dispose();
+    _initialWeightController.dispose();
     super.dispose();
   }
 
@@ -80,8 +87,7 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
           ),
           const SizedBox(height: RabySpacing.md),
           RabyCard(
-            radius: RabyRadius.xl,
-            softShadow: true,
+            radius: RabyRadius.lg,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -113,21 +119,32 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
                   segments: const [
                     ButtonSegment(
                       value: RabbitSex.unknown,
-                      label: Text('未知'),
+                      label: Text(
+                        '未知',
+                        style: TextStyle(fontFamily: 'RabyChillRoundF'),
+                      ),
                       icon: RabySketchIcon(kind: RabyIconKind.unknown),
                     ),
                     ButtonSegment(
                       value: RabbitSex.female,
-                      label: Text('女孩'),
+                      label: Text(
+                        '女孩',
+                        style: TextStyle(fontFamily: 'RabyChillRoundF'),
+                      ),
                       icon: RabySketchIcon(kind: RabyIconKind.female),
                     ),
                     ButtonSegment(
                       value: RabbitSex.male,
-                      label: Text('男孩'),
+                      label: Text(
+                        '男孩',
+                        style: TextStyle(fontFamily: 'RabyChillRoundF'),
+                      ),
                       icon: RabySketchIcon(kind: RabyIconKind.male),
                     ),
                   ],
                   selected: {_sex},
+                  showSelectedIcon: false,
+                  expandedInsets: EdgeInsets.zero,
                   onSelectionChanged: _isSaving
                       ? null
                       : (values) => setState(() => _sex = values.single),
@@ -137,8 +154,7 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
           ),
           const SizedBox(height: RabySpacing.md),
           RabyCard(
-            radius: RabyRadius.xl,
-            softShadow: true,
+            radius: RabyRadius.lg,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -193,13 +209,26 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
                 const SizedBox(height: RabySpacing.sm),
                 TextFormField(
                   controller: _furColorController,
-                  textInputAction: TextInputAction.done,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: '毛色',
                     hintText: '例如 奶油白',
                   ),
                   validator: (value) =>
                       (value?.trim().isEmpty ?? true) ? '请填写毛色' : null,
+                ),
+                const SizedBox(height: RabySpacing.sm),
+                TextFormField(
+                  controller: _initialWeightController,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: '初始体重',
+                    hintText: '例如 1820',
+                    suffixText: 'g',
+                  ),
+                  validator: _validateInitialWeight,
                 ),
               ],
             ),
@@ -306,6 +335,9 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
       adoptedDate: _adoptedDateController.text,
       breed: _breedController.text,
       furColor: _furColorController.text,
+      initialWeightGrams: _initialWeightController.text.trim().isEmpty
+          ? null
+          : int.parse(_initialWeightController.text),
       avatarPath: _avatarPath,
       avatarLocalPath: _avatarLocalPath,
     );
@@ -337,6 +369,18 @@ class _RabbitFormState extends ConsumerState<RabbitForm> {
     final now = ref.read(clockProvider)().toLocal();
     return DateTime(now.year, now.month, now.day);
   }
+
+  String? _validateInitialWeight(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) {
+      return null;
+    }
+    final grams = int.tryParse(text);
+    if (grams == null || grams < 1 || grams > 20000) {
+      return '初始体重需要在 1-20000g 之间';
+    }
+    return null;
+  }
 }
 
 class _AvatarField extends StatelessWidget {
@@ -355,24 +399,32 @@ class _AvatarField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RabyCard(
-      radius: RabyRadius.hero,
-      softShadow: true,
-      gradient: const LinearGradient(
-        colors: [RabyColors.surfaceWarm, RabyColors.paper],
-      ),
+      radius: RabyRadius.lg,
+      color: RabyColors.surfaceSoft,
+      borderColor: RabyColors.borderWarm,
       child: InkWell(
         onTap: enabled ? onPick : null,
         borderRadius: BorderRadius.circular(RabyRadius.hero),
         child: Row(
           children: [
-            RabbitAvatar(
-              avatarPath: avatarPath,
-              localPath: localPath,
-              size: 82,
-              iconSize: 40,
-              borderWidth: 5,
-              borderColor: RabyColors.stickerBorder,
-            ),
+            if (localPath == null &&
+                (avatarPath == null || avatarPath!.isEmpty))
+              const RabyImageSlot(
+                width: 78,
+                height: 78,
+                radius: RabyRadius.md,
+                placeholderColor: RabyColors.surfaceWarm,
+                semanticLabel: '待替换兔兔头像',
+              )
+            else
+              RabbitAvatar(
+                avatarPath: avatarPath,
+                localPath: localPath,
+                size: 78,
+                iconSize: 38,
+                borderWidth: 4,
+                borderColor: RabyColors.stickerBorder,
+              ),
             const SizedBox(width: RabySpacing.md),
             Expanded(
               child: Column(
@@ -384,7 +436,7 @@ class _AvatarField extends StatelessWidget {
                     localPath == null &&
                             (avatarPath == null || avatarPath!.isEmpty)
                         ? '选择一张正脸或日常照片作为档案头像。'
-                        : '已选择头像,保存后会同步到档案。',
+                        : '已选择头像，保存后会同步到档案。',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: RabyColors.textSecondary,
                     ),

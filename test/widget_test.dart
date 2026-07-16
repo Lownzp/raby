@@ -29,7 +29,7 @@ void main() {
     await tester.pumpWidget(_testApp(rabbitRepository));
     await tester.pumpAndSettle();
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
     expect(find.text('完成建档'), findsOneWidget);
   });
 
@@ -50,7 +50,7 @@ void main() {
     await tester.tap(find.byTooltip('建立兔兔档案'));
     await _pumpRoute(tester);
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
     expect(find.text('写日记'), findsNothing);
   });
 
@@ -70,7 +70,7 @@ void main() {
     await tester.tap(find.text('先建档'));
     await _pumpRoute(tester);
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
   });
 
   testWidgets('weight top add opens onboarding when no rabbit exists', (
@@ -90,7 +90,7 @@ void main() {
     await tester.tap(find.byTooltip('建立兔兔档案'));
     await _pumpRoute(tester);
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
     expect(find.text('记录体重'), findsNothing);
   });
 
@@ -127,7 +127,7 @@ void main() {
     await tester.tap(find.byTooltip('建立兔兔档案'));
     await _pumpRoute(tester);
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
   });
 
   testWidgets('rabbit edit empty state offers onboarding action', (
@@ -148,7 +148,7 @@ void main() {
     await tester.tap(find.text('建立兔兔档案'));
     await _pumpRoute(tester);
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
   });
 
   testWidgets('weight editor empty state disables date picker action', (
@@ -218,7 +218,7 @@ void main() {
     await tester.tap(find.text('建立兔兔档案'));
     await _pumpRoute(tester);
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
   });
 
   testWidgets('creates first rabbit and shows it on records page', (
@@ -230,18 +230,43 @@ void main() {
 
     await tester.pumpWidget(_testApp(rabbitRepository));
     await tester.pumpAndSettle();
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
 
     await tester.enterText(find.byType(TextFormField).at(0), '米粒');
     await tester.enterText(find.byType(TextFormField).at(1), '2023-03-01');
     await tester.enterText(find.byType(TextFormField).at(3), '垂耳兔');
     await tester.enterText(find.byType(TextFormField).at(4), '奶油白');
+    await tester.enterText(find.byType(TextFormField).at(5), '1820');
     await tester.tap(find.text('完成建档'));
     await _pumpRoute(tester);
 
     expect(find.text('首页'), findsWidgets);
     expect(find.text('米粒'), findsOneWidget);
     expect(find.text('一只 3 岁的奶油白垂耳兔'), findsOneWidget);
+    expect(
+      (await rabbitRepository.getDefaultRabbit())?.initialWeightGrams,
+      1820,
+    );
+  });
+
+  testWidgets('rejects an out-of-range initial rabbit weight', (tester) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository();
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(_testApp(rabbitRepository));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).at(0), '米粒');
+    await tester.enterText(find.byType(TextFormField).at(1), '2023-03-01');
+    await tester.enterText(find.byType(TextFormField).at(3), '垂耳兔');
+    await tester.enterText(find.byType(TextFormField).at(4), '奶油白');
+    await tester.enterText(find.byType(TextFormField).at(5), '20001');
+    await tester.tap(find.text('完成建档'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('初始体重需要在 1-20000g 之间'), findsOneWidget);
+    expect(await rabbitRepository.getDefaultRabbit(), isNull);
   });
 
   testWidgets('shows existing rabbit across records and profile tabs', (
@@ -548,7 +573,7 @@ void main() {
     await tester.tap(find.text('删除').last);
     await _pumpRoute(tester);
 
-    expect(find.text('建立第一只兔兔档案'), findsOneWidget);
+    expect(find.text('创建宠物档案'), findsOneWidget);
     expect(await rabbitRepository.getDefaultRabbit(), isNull);
   });
 
