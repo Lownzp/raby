@@ -15,29 +15,40 @@ class RabyShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: child,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-          child: Container(
-            height: 76,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF6E1),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: RabyColors.stickerBorder, width: 4),
-            ),
-            child: Row(
-              children: [
-                for (var index = 0; index < _tabs.length; index++)
-                  Expanded(
-                    child: _RabyTabButton(
-                      tab: _tabs[index],
-                      selected: index == _selectedIndex,
-                      onTap: () => context.go(_tabs[index].route),
-                    ),
+      bottomNavigationBar: RabyBottomNavigation(currentPath: currentPath),
+    );
+  }
+}
+
+class RabyBottomNavigation extends StatelessWidget {
+  const RabyBottomNavigation({required this.currentPath, super.key});
+
+  final String currentPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+        child: Container(
+          height: 76,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF6E1),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: RabyColors.stickerBorder, width: 4),
+          ),
+          child: Row(
+            children: [
+              for (var index = 0; index < _tabs.length; index++)
+                Expanded(
+                  child: _RabyTabButton(
+                    tab: _tabs[index],
+                    selected: index == _selectedIndex,
+                    onTap: () => context.go(_tabs[index].route),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

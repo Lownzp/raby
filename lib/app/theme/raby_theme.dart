@@ -197,6 +197,59 @@ abstract final class RabyTheme {
           letterSpacing: 0,
         ),
       ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: WidgetStateProperty.all(const Size(44, 38)),
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: RabySpacing.md),
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? RabyColors.surfaceWarm
+                : RabyColors.surface;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? RabyColors.primaryDeep
+                : RabyColors.textSecondary;
+          }),
+          side: WidgetStateProperty.all(
+            const BorderSide(color: RabyColors.borderWarm),
+          ),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(RabyRadius.pill),
+            ),
+          ),
+          textStyle: WidgetStateProperty.all(
+            const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: RabyColors.secondary,
+          minimumSize: const Size(48, 52),
+          side: const BorderSide(color: RabyColors.borderWarm),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(RabyRadius.pill),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0,
+          ),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: RabyColors.border,
+        thickness: 1,
+        space: 1,
+      ),
     );
   }
 }

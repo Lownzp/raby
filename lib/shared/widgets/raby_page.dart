@@ -117,6 +117,68 @@ class RabyIconBubble extends StatelessWidget {
   }
 }
 
+class RabyTopBar extends StatelessWidget {
+  const RabyTopBar({
+    required this.title,
+    required this.onBack,
+    this.actionIcon,
+    this.actionTooltip,
+    this.onAction,
+    this.enabled = true,
+    super.key,
+  });
+
+  final String title;
+  final VoidCallback onBack;
+  final RabyIconKind? actionIcon;
+  final String? actionTooltip;
+  final VoidCallback? onAction;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    const actionSize = 44.0;
+    return SizedBox(
+      height: actionSize,
+      child: Row(
+        children: [
+          RabyIconBubble(
+            icon: RabyIconKind.back,
+            tooltip: '返回',
+            size: actionSize,
+            iconSize: 21,
+            onTap: enabled ? onBack : null,
+          ),
+          const SizedBox(width: RabySpacing.sm),
+          Expanded(
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          const SizedBox(width: RabySpacing.sm),
+          if (actionIcon == null)
+            const SizedBox.square(dimension: actionSize)
+          else
+            RabyIconBubble(
+              icon: actionIcon!,
+              tooltip: actionTooltip,
+              size: actionSize,
+              iconSize: 21,
+              iconColor: enabled && onAction != null
+                  ? RabyColors.textPrimary
+                  : RabyColors.textTertiary,
+              onTap: enabled ? onAction : null,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class RabySticker extends StatelessWidget {
   const RabySticker({
     required this.icon,
