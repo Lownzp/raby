@@ -7,7 +7,9 @@ import '../../../app/router/app_routes.dart';
 import '../../../app/theme/raby_colors.dart';
 import '../../../app/theme/raby_tokens.dart';
 import '../../../domain/models/rabbit.dart';
+import '../../../domain/models/weight_record.dart';
 import '../../../shared/widgets/raby_card.dart';
+import '../../../shared/widgets/raby_image_slot.dart';
 import '../../../shared/widgets/raby_page.dart';
 import '../../../shared/widgets/raby_sketch_icon.dart';
 import '../../../shared/widgets/raby_state_card.dart';
@@ -37,12 +39,12 @@ class ProfilePage extends ConsumerWidget {
           loading: () => const RabyStateCard(
             icon: RabyIconKind.hourglass,
             title: '正在读取档案',
-            message: '稍等一下,本地档案正在准备。',
+            message: '稍等一下，本地档案正在准备。',
           ),
           error: (error, _) => RabyStateCard(
             icon: RabyIconKind.error,
             title: '档案读取失败',
-            message: '本地数据暂时不可用,可以重试一次。',
+            message: '本地数据暂时不可用，可以重试一次。',
             actionLabel: '重试',
             actionIcon: RabyIconKind.refresh,
             tone: RabyStateTone.danger,
@@ -68,17 +70,25 @@ class _ProfileContent extends ConsumerWidget {
         : ref
               .watch(diaryTimelineProvider(rabbit.id))
               .maybeWhen(data: (entries) => entries.length, orElse: () => 0);
-    final weightCount = rabbit == null
-        ? 0
+    final weightRecords = rabbit == null
+        ? const <WeightRecord>[]
         : ref
               .watch(weightRecordsProvider(rabbit.id))
-              .maybeWhen(data: (records) => records.length, orElse: () => 0);
+              .maybeWhen(data: (records) => records, orElse: () => const []);
+    final weightCount = weightRecords.length;
+    final latestWeightGrams = weightRecords.isEmpty
+        ? null
+        : weightRecords.first.weightGrams;
 
     return Column(
       children: [
         _OwnerCard(rabbit: rabbit, today: today),
         const SizedBox(height: RabySpacing.md),
-        _ProfileCard(rabbit: rabbit, today: today),
+        _ProfileCard(
+          rabbit: rabbit,
+          today: today,
+          latestWeightGrams: latestWeightGrams,
+        ),
         const SizedBox(height: RabySpacing.md),
         _StatsCard(
           diaryCount: diaryCount,
@@ -101,19 +111,16 @@ class _OwnerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final days = rabbit == null ? 0 : _companionDays(rabbit!, today);
-    return RabyCard(
-      radius: RabyRadius.xl,
-      softShadow: true,
-      gradient: const LinearGradient(
-        colors: [RabyColors.surfaceWarm, RabyColors.paper],
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: Row(
         children: [
-          const RabySticker(
-            icon: RabyIconKind.rabbit,
-            size: 54,
-            background: RabyColors.surface,
-            foreground: RabyColors.secondary,
+          const RabyImageSlot(
+            width: 64,
+            height: 64,
+            radius: RabyRadius.pill,
+            placeholderColor: RabyColors.surfaceWarm,
+            semanticLabel: '待替换主人头像',
           ),
           const SizedBox(width: RabySpacing.md),
           Expanded(
@@ -122,14 +129,16 @@ class _OwnerCard extends StatelessWidget {
               children: [
                 Text(
                   rabbit == null ? 'Raby 的主人' : '${rabbit!.name}的主人',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 3),
                 Text(
                   rabbit == null
                       ? '建立档案后开始记录陪伴日常'
                       : '陪伴${rabbit!.name}的第 $days 天',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: RabyColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -141,28 +150,43 @@ class _OwnerCard extends StatelessWidget {
 }
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.rabbit, required this.today});
+  const _ProfileCard({
+    required this.rabbit,
+    required this.today,
+    required this.latestWeightGrams,
+  });
 
   final Rabbit? rabbit;
   final DateTime today;
+  final int? latestWeightGrams;
 
   @override
   Widget build(BuildContext context) {
     return RabyCard(
-      radius: RabyRadius.hero,
-      softShadow: true,
+      radius: RabyRadius.lg,
+      color: RabyColors.surfaceSoft,
+      borderColor: RabyColors.borderWarm,
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              RabbitAvatar(
-                avatarPath: rabbit?.avatarPath,
-                size: 86,
-                iconSize: 44,
-                borderWidth: 5,
-                borderColor: RabyColors.stickerBorder,
-              ),
+              if (rabbit?.avatarPath == null || rabbit!.avatarPath!.isEmpty)
+                const RabyImageSlot(
+                  width: 112,
+                  height: 112,
+                  radius: RabyRadius.lg,
+                  semanticLabel: '待替换兔兔主图',
+                )
+              else
+                RabbitAvatar(
+                  avatarPath: rabbit!.avatarPath,
+                  size: 112,
+                  iconSize: 54,
+                  borderWidth: 4,
+                  borderColor: RabyColors.stickerBorder,
+                ),
               const SizedBox(width: RabySpacing.md),
               Expanded(
                 child: Column(
@@ -170,15 +194,27 @@ class _ProfileCard extends StatelessWidget {
                   children: [
                     Text(
                       rabbit?.name ?? '还没有兔兔档案',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(color: RabyColors.secondary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: RabyColors.secondary,
+                            fontFamily: rabbit == null
+                                ? 'RabyChillRoundF'
+                                : 'RabyChillRoundM',
+                          ),
                     ),
                     const SizedBox(height: RabySpacing.xs),
                     Text(
                       rabbit == null
                           ? '本地优先的兔子生活记录本'
-                          : _profileMetaText(rabbit!, today),
-                      style: Theme.of(context).textTheme.bodyMedium,
+                          : _profileMetaText(rabbit!, today, latestWeightGrams),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: RabyColors.textSecondary,
+                        height: 1.45,
+                      ),
                     ),
                   ],
                 ),
@@ -188,7 +224,7 @@ class _ProfileCard extends StatelessWidget {
           const SizedBox(height: RabySpacing.md),
           SizedBox(
             width: double.infinity,
-            child: FilledButton.icon(
+            child: OutlinedButton.icon(
               onPressed: () => context.go(
                 rabbit == null
                     ? AppRoutes.onboardingRabbit
@@ -220,7 +256,6 @@ class _StatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RabyCard(
-      softShadow: true,
       child: Row(
         children: [
           Expanded(
@@ -230,6 +265,7 @@ class _StatsCard extends StatelessWidget {
               icon: RabyIconKind.diary,
             ),
           ),
+          const SizedBox(height: 78, child: VerticalDivider(width: 1)),
           Expanded(
             child: _StatItem(
               value: weightCount.toString(),
@@ -237,6 +273,7 @@ class _StatsCard extends StatelessWidget {
               icon: RabyIconKind.weight,
             ),
           ),
+          const SizedBox(height: 78, child: VerticalDivider(width: 1)),
           Expanded(
             child: _StatItem(
               value: streakDays.toString(),
@@ -288,9 +325,25 @@ class _SettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RabyCard(
-      softShadow: true,
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              RabySpacing.md,
+              RabySpacing.md,
+              RabySpacing.md,
+              RabySpacing.ms,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '常用功能',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          ),
+          const Divider(height: 1),
           _SettingTile(
             icon: RabyIconKind.rabbit,
             title: '兔兔档案',
@@ -352,7 +405,7 @@ class _SettingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       minLeadingWidth: 0,
-      contentPadding: EdgeInsets.zero,
+      contentPadding: const EdgeInsets.symmetric(horizontal: RabySpacing.md),
       leading: RabySketchIcon(kind: icon, color: RabyColors.primaryDeep),
       title: Text(title, style: Theme.of(context).textTheme.titleSmall),
       subtitle: Text(subtitle),
@@ -385,9 +438,11 @@ String _ageText(Rabbit rabbit, DateTime today) {
   return '${months ~/ 12} 岁';
 }
 
-String _profileMetaText(Rabbit rabbit, DateTime today) {
-  final weight = rabbit.initialWeightGrams == null
-      ? '初始体重待填'
-      : '初始 ${rabbit.initialWeightGrams}g';
-  return '${rabbit.furColor}${rabbit.breed} · ${_ageText(rabbit, today)} · $weight';
+String _profileMetaText(Rabbit rabbit, DateTime today, int? latestWeightGrams) {
+  final weight = latestWeightGrams != null
+      ? '当前体重 ${latestWeightGrams}g'
+      : rabbit.initialWeightGrams == null
+      ? '体重待记录'
+      : '初始体重 ${rabbit.initialWeightGrams}g';
+  return '${rabbit.furColor}${rabbit.breed}\n${_ageText(rabbit, today)} · $weight';
 }

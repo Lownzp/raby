@@ -266,6 +266,29 @@ void main() {
     expect(find.text('查看和编辑 米粒'), findsOneWidget);
   });
 
+  testWidgets('profile shows the latest recorded weight', (tester) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository(
+      seed: [_rabbit(initialWeightGrams: 1280)],
+    );
+    final weightRepository = _FakeWeightRepository(
+      seed: [
+        _weight(id: 'profile-latest-weight', recordedAt: _testNow, grams: 1310),
+      ],
+    );
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(
+      _testApp(rabbitRepository, weightRepository: weightRepository),
+    );
+    await tester.pumpAndSettle();
+
+    await _tapBottomNav(tester, '我的');
+
+    expect(find.textContaining('当前体重 1310g'), findsOneWidget);
+    expect(find.textContaining('初始体重 1280g'), findsNothing);
+  });
+
   testWidgets('home quick actions stay single-line on narrow phones', (
     tester,
   ) async {
