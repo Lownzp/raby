@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -246,6 +247,11 @@ Future<void> _loadScreenshotFonts() async {
   await _loadFontAsset('RabyChillRoundM', [
     'assets/fonts/chill-round/ChillRoundM.ttf',
   ]);
+  await _loadPackageFont(
+    family: 'packages/lucide_flutter/LucideIcons',
+    packageName: 'lucide_flutter',
+    assetPath: 'assets/lucide.ttf',
+  );
   await _loadFontIfExists('Microsoft YaHei', [
     'C:/Windows/Fonts/msyh.ttc',
     'C:/Windows/Fonts/simhei.ttf',
@@ -254,6 +260,37 @@ Future<void> _loadScreenshotFonts() async {
   await _loadFontIfExists('MaterialIcons', [
     'D:/work/toolchains/flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf',
   ]);
+}
+
+Future<void> _loadPackageFont({
+  required String family,
+  required String packageName,
+  required String assetPath,
+}) async {
+  final configFile = File('.dart_tool/package_config.json');
+  if (!configFile.existsSync()) {
+    return;
+  }
+  final config =
+      jsonDecode(configFile.readAsStringSync()) as Map<String, Object?>;
+  final packages = config['packages'] as List<Object?>? ?? const [];
+  for (final rawPackage in packages) {
+    final package = rawPackage as Map<String, Object?>;
+    if (package['name'] != packageName) {
+      continue;
+    }
+    final rootUriValue = package['rootUri'] as String?;
+    if (rootUriValue == null) {
+      return;
+    }
+    final resolvedRootUri = configFile.parent.uri.resolve(rootUriValue);
+    final rootUri = resolvedRootUri.path.endsWith('/')
+        ? resolvedRootUri
+        : resolvedRootUri.replace(path: '${resolvedRootUri.path}/');
+    final fontFile = File.fromUri(rootUri.resolve(assetPath));
+    await _loadFontAsset(family, [fontFile.path]);
+    return;
+  }
 }
 
 Future<void> _loadFontAsset(String family, List<String> paths) async {

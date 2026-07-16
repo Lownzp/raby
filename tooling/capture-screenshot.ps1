@@ -81,7 +81,7 @@ $env:RABY_SCREENSHOT_PIXEL_RATIO = "$PixelRatio"
 $env:RABY_SCREENSHOT_OUTPUT = $outputPath
 
 try {
-  $args = "test --plain-name `"capture $Page`" `"$harness`""
+  $args = "test --no-pub --plain-name `"capture $Page`" `"$harness`""
   $process = Start-Process `
     -FilePath $flutter `
     -ArgumentList $args `

@@ -361,7 +361,8 @@ void main() {
     expect(find.text('记录体重'), findsOneWidget);
     expect(find.widgetWithText(TextField, '1280'), findsOneWidget);
 
-    await tester.tap(find.text('保存体重'));
+    expect(find.byKey(const ValueKey('raby-tab-体重')), findsOneWidget);
+    await tester.tap(find.text('保存记录'));
     await _pumpRoute(tester);
 
     expect(find.text('1280 g'), findsWidgets);
@@ -374,7 +375,7 @@ void main() {
 
     await tester.enterText(find.byType(TextField).first, '1310');
     await tester.pump();
-    await tester.tap(find.text('保存体重'));
+    await tester.tap(find.text('保存记录'));
     await _pumpRoute(tester);
 
     expect(find.text('1310 g'), findsWidgets);
