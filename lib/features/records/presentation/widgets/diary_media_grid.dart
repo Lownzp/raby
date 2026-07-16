@@ -7,7 +7,7 @@ import '../../../../app/providers/repository_providers.dart';
 import '../../../../app/theme/raby_colors.dart';
 import '../../../../app/theme/raby_tokens.dart';
 import '../../../../domain/models/diary_media.dart';
-import '../../../../shared/widgets/raby_sketch_icon.dart';
+import '../../../../shared/widgets/raby_image_slot.dart';
 
 class DiaryMediaGrid extends StatelessWidget {
   const DiaryMediaGrid({required this.media, this.onMediaTap, super.key});
@@ -104,18 +104,6 @@ class _ImagePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: RabyColors.surfaceSoft,
-        border: Border.all(color: RabyColors.border),
-      ),
-      child: const Center(
-        child: RabySketchIcon(
-          kind: RabyIconKind.photo,
-          color: RabyColors.primaryDeep,
-          size: 38,
-        ),
-      ),
-    );
+    return const RabyImageSlot(radius: 0, semanticLabel: '待替换日记图片');
   }
 }

@@ -7,10 +7,13 @@ import '../../../app/theme/raby_colors.dart';
 import '../../../app/theme/raby_tokens.dart';
 import '../../../domain/models/diary_entry.dart';
 import '../../../domain/models/weight_record.dart';
+import '../../../shared/navigation/raby_shell.dart';
 import '../../../shared/widgets/raby_card.dart';
+import '../../../shared/widgets/raby_image_slot.dart';
 import '../../../shared/widgets/raby_page.dart';
 import '../../../shared/widgets/raby_sketch_icon.dart';
 import '../../../shared/widgets/raby_state_card.dart';
+import '../../../shared/widgets/rabbit_avatar.dart';
 import '../../rabbits/application/current_rabbit_providers.dart';
 import '../../weight/application/weight_providers.dart';
 import '../application/diary_editor_controller.dart';
@@ -36,7 +39,14 @@ class DiaryDetailPage extends ConsumerWidget {
           ),
       orElse: () => false,
     );
+    final loadedEntry = entryState.maybeWhen(
+      data: (entry) => entry,
+      orElse: () => null,
+    );
     return Scaffold(
+      bottomNavigationBar: const RabyBottomNavigation(
+        currentPath: AppRoutes.records,
+      ),
       body: RabyPage(
         title: '日记详情',
         centerTitle: true,
@@ -45,14 +55,14 @@ class DiaryDetailPage extends ConsumerWidget {
           tooltip: '返回',
           onTap: () => context.go(AppRoutes.records),
         ),
-        trailing: canEdit
-            ? RabyIconBubble(
-                icon: RabyIconKind.edit,
-                tooltip: '编辑',
-                onTap: () => context.go(AppRoutes.recordEdit(diaryId)),
-              )
-            : null,
-        bottomPadding: RabySpacing.xl,
+        trailing: loadedEntry == null
+            ? null
+            : _DiaryActionsMenu(
+                canEdit: canEdit,
+                onEdit: () => context.go(AppRoutes.recordEdit(diaryId)),
+                onDelete: () => _confirmDelete(context, ref, loadedEntry),
+              ),
+        bottomPadding: RabySpacing.lg,
         children: [
           entryState.when(
             data: (entry) {
@@ -87,6 +97,80 @@ class DiaryDetailPage extends ConsumerWidget {
   }
 }
 
+class _DiaryActionsMenu extends StatelessWidget {
+  const _DiaryActionsMenu({
+    required this.canEdit,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final bool canEdit;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_DiaryDetailAction>(
+      tooltip: '更多操作',
+      position: PopupMenuPosition.under,
+      icon: const RabySketchIcon(kind: RabyIconKind.more),
+      style: IconButton.styleFrom(
+        fixedSize: const Size.square(54),
+        backgroundColor: RabyColors.surface,
+        foregroundColor: RabyColors.textPrimary,
+        side: const BorderSide(color: RabyColors.border),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(RabyRadius.xl),
+        ),
+      ),
+      onSelected: (action) {
+        switch (action) {
+          case _DiaryDetailAction.edit:
+            onEdit();
+            break;
+          case _DiaryDetailAction.delete:
+            onDelete();
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        if (canEdit)
+          const PopupMenuItem(
+            value: _DiaryDetailAction.edit,
+            child: Row(
+              children: [
+                RabySketchIcon(kind: RabyIconKind.edit, size: 18),
+                SizedBox(width: RabySpacing.sm),
+                Text('编辑'),
+              ],
+            ),
+          ),
+        PopupMenuItem(
+          value: _DiaryDetailAction.delete,
+          child: Row(
+            children: [
+              const RabySketchIcon(
+                kind: RabyIconKind.delete,
+                size: 18,
+                color: RabyColors.danger,
+              ),
+              const SizedBox(width: RabySpacing.sm),
+              Text(
+                '删除',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: RabyColors.danger),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _DiaryDetailAction { edit, delete }
+
 class _DiaryDetailContent extends ConsumerWidget {
   const _DiaryDetailContent({required this.entry});
 
@@ -109,18 +193,28 @@ class _DiaryDetailContent extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RabyCard(
-          radius: RabyRadius.xl,
-          softShadow: true,
-          gradient: const LinearGradient(
-            colors: [RabyColors.surfaceWarm, RabyColors.paper],
-          ),
+          radius: RabyRadius.lg,
+          color: RabyColors.surfaceSoft,
+          borderColor: RabyColors.borderWarm,
           child: Row(
             children: [
-              const RabySticker(
-                icon: RabyIconKind.diary,
-                size: 54,
-                background: RabyColors.surface,
-              ),
+              if (!hasMatchingRabbit ||
+                  rabbit!.avatarPath == null ||
+                  rabbit.avatarPath!.isEmpty)
+                const RabyImageSlot(
+                  width: 68,
+                  height: 68,
+                  radius: RabyRadius.md,
+                  semanticLabel: '待替换兔兔头像',
+                )
+              else
+                RabbitAvatar(
+                  avatarPath: rabbit.avatarPath,
+                  size: 68,
+                  iconSize: 34,
+                  borderWidth: 3,
+                  borderColor: RabyColors.stickerBorder,
+                ),
               const SizedBox(width: RabySpacing.md),
               Expanded(
                 child: Column(
@@ -130,6 +224,9 @@ class _DiaryDetailContent extends ConsumerWidget {
                       hasMatchingRabbit ? rabbit!.name : '兔兔日记',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: RabyColors.secondary,
+                        fontFamily: hasMatchingRabbit
+                            ? 'RabyChillRoundM'
+                            : 'RabyChillRoundF',
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -141,18 +238,25 @@ class _DiaryDetailContent extends ConsumerWidget {
                 ),
               ),
               if (entry.tags.isNotEmpty)
-                _SoftBadge(label: entry.tags.first.name),
+                Chip(
+                  avatar: const RabySketchIcon(
+                    kind: RabyIconKind.diary,
+                    size: 16,
+                  ),
+                  label: Text(entry.tags.first.name),
+                  visualDensity: VisualDensity.compact,
+                ),
             ],
           ),
         ),
         const SizedBox(height: RabySpacing.md),
         RabyCard(
-          radius: RabyRadius.xl,
-          softShadow: true,
+          radius: RabyRadius.lg,
+          padding: const EdgeInsets.all(RabySpacing.ml),
           child: Text(
             entry.diary.content?.trim().isNotEmpty == true
                 ? entry.diary.content!.trim()
-                : '这一天只留下了照片,没有写正文。',
+                : '这一天只留下了照片，没有写正文。',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: RabyColors.secondary,
               fontSize: 17,
@@ -162,84 +266,70 @@ class _DiaryDetailContent extends ConsumerWidget {
         ),
         if (entry.media.isNotEmpty) ...[
           const SizedBox(height: RabySpacing.md),
-          RabyCard(
-            radius: RabyRadius.xl,
-            softShadow: true,
-            child: DiaryMediaGrid(
-              media: entry.media,
-              onMediaTap: (index) {
-                context.push(
-                  AppRoutes.mediaPhotos,
-                  extra: PhotoViewerArgs(
-                    media: entry.media,
-                    initialIndex: index,
-                    returnPath: AppRoutes.recordDetail(entry.diary.id),
-                    returnTooltip: '返回详情',
-                    returnLabel: '返回详情',
-                  ),
-                );
-              },
-            ),
+          DiaryMediaGrid(
+            media: entry.media,
+            onMediaTap: (index) {
+              context.push(
+                AppRoutes.mediaPhotos,
+                extra: PhotoViewerArgs(
+                  media: entry.media,
+                  initialIndex: index,
+                  returnPath: AppRoutes.recordDetail(entry.diary.id),
+                  returnTooltip: '返回详情',
+                  returnLabel: '返回详情',
+                ),
+              );
+            },
           ),
         ],
         const SizedBox(height: RabySpacing.md),
-        RabyCard(
-          softShadow: true,
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              if (entry.tags.isEmpty)
-                const _SoftBadge(label: '日常')
-              else
-                for (final tag in entry.tags) _SoftBadge(label: tag.name),
-            ],
+        SizedBox(
+          width: double.infinity,
+          child: RabyCard(
+            color: RabyColors.surfaceSoft,
+            borderColor: RabyColors.borderWarm,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('今日状态', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: RabySpacing.ms),
+                Wrap(
+                  spacing: RabySpacing.sm,
+                  runSpacing: RabySpacing.sm,
+                  children: [
+                    if (entry.tags.isEmpty)
+                      const Chip(label: Text('日常'))
+                    else
+                      for (final tag in entry.tags) Chip(label: Text(tag.name)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
         if (hasMatchingRabbit) ...[
           const SizedBox(height: RabySpacing.md),
           RabyCard(
-            softShadow: true,
-            child: Row(
-              children: [
-                const RabySticker(icon: RabyIconKind.weight, size: 48),
-                const SizedBox(width: RabySpacing.md),
-                Expanded(
-                  child: Text(
-                    weight == null
-                        ? '当天还没有记录体重'
-                        : '当天体重：${weight.weightGrams}g',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              leading: const RabySticker(icon: RabyIconKind.weight, size: 44),
+              title: Text(
+                weight == null ? '当天还没有记录体重' : '当天体重：${weight.weightGrams}g',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              trailing: TextButton.icon(
+                onPressed: () => context.go(AppRoutes.weight),
+                iconAlignment: IconAlignment.end,
+                icon: const RabySketchIcon(
+                  kind: RabyIconKind.chevronRight,
+                  size: 16,
                 ),
-                TextButton.icon(
-                  onPressed: () => context.go(AppRoutes.weight),
-                  icon: const RabySketchIcon(
-                    kind: RabyIconKind.chevronRight,
-                    size: 16,
-                  ),
-                  label: const Text('查看趋势'),
-                ),
-              ],
+                label: const Text('查看趋势'),
+              ),
             ),
           ),
         ],
         const SizedBox(height: RabySpacing.lg),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: () => context.go(
-              hasMatchingRabbit
-                  ? AppRoutes.recordsNew
-                  : AppRoutes.onboardingRabbit,
-            ),
-            icon: RabySketchIcon(
-              kind: hasMatchingRabbit ? RabyIconKind.diary : RabyIconKind.add,
-            ),
-            label: Text(hasMatchingRabbit ? '再写一篇' : '建立兔兔档案'),
-          ),
-        ),
-        const SizedBox(height: RabySpacing.sm),
         if (hasMatchingRabbit)
           Row(
             children: [
@@ -253,14 +343,10 @@ class _DiaryDetailContent extends ConsumerWidget {
               ),
               const SizedBox(width: RabySpacing.md),
               Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: RabyColors.danger,
-                    side: const BorderSide(color: RabyColors.danger),
-                  ),
-                  onPressed: () => _confirmDelete(context, ref, entry),
-                  icon: const RabySketchIcon(kind: RabyIconKind.delete),
-                  label: const Text('删除'),
+                child: FilledButton.icon(
+                  onPressed: () => context.go(AppRoutes.recordsNew),
+                  icon: const RabySketchIcon(kind: RabyIconKind.diary),
+                  label: const Text('再写一篇'),
                 ),
               ),
             ],
@@ -268,94 +354,63 @@ class _DiaryDetailContent extends ConsumerWidget {
         else
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: RabyColors.danger,
-                side: const BorderSide(color: RabyColors.danger),
-              ),
-              onPressed: () => _confirmDelete(context, ref, entry),
-              icon: const RabySketchIcon(kind: RabyIconKind.delete),
-              label: const Text('删除这条日记'),
+            child: FilledButton.icon(
+              onPressed: () => context.go(AppRoutes.onboardingRabbit),
+              icon: const RabySketchIcon(kind: RabyIconKind.add),
+              label: const Text('建立兔兔档案'),
             ),
           ),
       ],
     );
   }
-
-  Future<void> _confirmDelete(
-    BuildContext context,
-    WidgetRef ref,
-    DiaryEntry entry,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('删除这条日记?'),
-        content: const Text('删除后会从时间轴隐藏,这个操作需要确认。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: RabyColors.danger,
-              foregroundColor: RabyColors.onPrimary,
-            ),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            icon: const RabySketchIcon(kind: RabyIconKind.delete),
-            label: const Text('删除'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) {
-      return;
-    }
-    try {
-      await ref.read(diaryEditorControllerProvider).delete(entry.diary.id);
-      if (!context.mounted) {
-        return;
-      }
-      context.go(AppRoutes.records);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('日记已删除')));
-    } catch (error) {
-      if (!context.mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('删除失败: $error')));
-    }
-  }
 }
 
-class _SoftBadge extends StatelessWidget {
-  const _SoftBadge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: RabyColors.surfaceWarm,
-        borderRadius: BorderRadius.circular(RabyRadius.pill),
-        border: Border.all(color: RabyColors.borderWarm),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: RabyColors.secondary,
-            fontWeight: FontWeight.w900,
-          ),
+Future<void> _confirmDelete(
+  BuildContext context,
+  WidgetRef ref,
+  DiaryEntry entry,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('删除这条日记?'),
+      content: const Text('删除后会从时间轴隐藏，这个操作需要确认。'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('取消'),
         ),
-      ),
-    );
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: RabyColors.danger,
+            foregroundColor: RabyColors.onPrimary,
+          ),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          icon: const RabySketchIcon(kind: RabyIconKind.delete),
+          label: const Text('删除'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) {
+    return;
+  }
+  try {
+    await ref.read(diaryEditorControllerProvider).delete(entry.diary.id);
+    if (!context.mounted) {
+      return;
+    }
+    context.go(AppRoutes.records);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('日记已删除')));
+  } catch (error) {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('删除失败: $error')));
   }
 }
 

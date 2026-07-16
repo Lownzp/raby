@@ -693,8 +693,10 @@ void main() {
 
     expect(find.text('日记详情'), findsOneWidget);
     expect(find.text('当天还没有记录体重'), findsOneWidget);
+    expect(find.byKey(const ValueKey('raby-tab-首页')), findsOneWidget);
 
-    await tester.tap(find.byTooltip('编辑'));
+    await tester.ensureVisible(find.widgetWithText(OutlinedButton, '编辑'));
+    await tester.tap(find.widgetWithText(OutlinedButton, '编辑'));
     await _pumpRoute(tester);
 
     expect(find.text('编辑日记'), findsOneWidget);
@@ -738,6 +740,8 @@ void main() {
 
     expect(find.text('日记详情'), findsOneWidget);
 
+    await tester.tap(find.byTooltip('更多操作'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('删除'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('删除').last);

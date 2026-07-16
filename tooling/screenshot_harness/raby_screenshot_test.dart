@@ -232,10 +232,18 @@ ThemeData _screenshotTheme() {
     filledButtonTheme: FilledButtonThemeData(
       style: theme.filledButtonTheme.style?.copyWith(textStyle: buttonText),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: theme.outlinedButtonTheme.style?.copyWith(textStyle: buttonText),
+    ),
     textButtonTheme: TextButtonThemeData(
       style:
           theme.textButtonTheme.style?.copyWith(textStyle: buttonText) ??
           TextButton.styleFrom(textStyle: buttonText.resolve({})),
+    ),
+    chipTheme: theme.chipTheme.copyWith(
+      labelStyle: theme.chipTheme.labelStyle?.copyWith(
+        fontFamily: rabyTextFontFamily,
+      ),
     ),
   );
 }
