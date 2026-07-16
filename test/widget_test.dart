@@ -51,7 +51,7 @@ void main() {
     await _pumpRoute(tester);
 
     expect(find.text('建立第一只兔兔档案'), findsOneWidget);
-    expect(find.text('写生活日记'), findsNothing);
+    expect(find.text('写日记'), findsNothing);
   });
 
   testWidgets('records empty quick actions open onboarding', (tester) async {
@@ -555,7 +555,34 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, '写日记'));
     await _pumpRoute(tester);
-    expect(find.text('写生活日记'), findsOneWidget);
+    expect(find.text('写日记'), findsOneWidget);
+  });
+
+  testWidgets('diary draft survives a temporary weight entry visit', (
+    tester,
+  ) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository(seed: [_rabbit()]);
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(_testApp(rabbitRepository));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('写第一条日记'));
+    await _pumpRoute(tester);
+    await tester.enterText(find.byType(TextField).first, '这段草稿不能丢');
+    await tester.pump();
+
+    await tester.ensureVisible(find.text('去记录'));
+    await tester.tap(find.text('去记录'));
+    await _pumpRoute(tester);
+    expect(find.text('记录体重'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('返回'));
+    await _pumpRoute(tester);
+
+    expect(find.text('写日记'), findsOneWidget);
+    expect(find.text('这段草稿不能丢'), findsOneWidget);
   });
 
   testWidgets('creates edits and deletes a diary from records timeline', (
@@ -580,11 +607,11 @@ void main() {
 
     await tester.tap(find.text('写第一条日记'));
     await _pumpRoute(tester);
-    expect(find.text('写生活日记'), findsOneWidget);
+    expect(find.text('写日记'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).first, '今天吃草很认真');
     await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('quick-tag-system-hay')));
+    await tester.tap(find.text('饮食'));
     await tester.pump();
     await tester.tap(find.widgetWithText(FilterChip, '日常'));
     await tester.pump();
@@ -919,7 +946,7 @@ void main() {
 
     await tester.tap(find.text('写第一条日记'));
     await _pumpRoute(tester);
-    expect(find.text('写生活日记'), findsOneWidget);
+    expect(find.text('写日记'), findsOneWidget);
 
     await tester.tap(find.byTooltip('返回'));
     await _pumpRoute(tester);
@@ -927,7 +954,7 @@ void main() {
 
     await tester.tap(find.text('写第一条日记'));
     await _pumpRoute(tester);
-    expect(find.text('写生活日记'), findsOneWidget);
+    expect(find.text('写日记'), findsOneWidget);
 
     await tester.binding.handlePopRoute();
     await _pumpRoute(tester);

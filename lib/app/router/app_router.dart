@@ -67,8 +67,9 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.startup}) {
       ),
       GoRoute(
         path: AppRoutes.weightNew,
-        pageBuilder: (context, state) =>
-            const MaterialPage(child: WeightEditPage()),
+        pageBuilder: (context, state) => MaterialPage(
+          child: WeightEditPage(returnToPrevious: state.extra == true),
+        ),
       ),
       GoRoute(
         path: AppRoutes.weightEditPattern,

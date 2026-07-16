@@ -9,9 +9,9 @@ import '../../../app/theme/raby_tokens.dart';
 import '../../../domain/domain_validation_exception.dart';
 import '../../../domain/models/diary_entry.dart';
 import '../../../domain/models/rabbit.dart';
-import '../../../domain/models/raby_enums.dart';
-import '../../../domain/models/tag.dart';
+import '../../../shared/navigation/raby_shell.dart';
 import '../../../shared/widgets/raby_card.dart';
+import '../../../shared/widgets/raby_image_slot.dart';
 import '../../../shared/widgets/raby_page.dart';
 import '../../../shared/widgets/raby_sketch_icon.dart';
 import '../../../shared/widgets/rabbit_avatar.dart';
@@ -20,7 +20,6 @@ import '../application/diary_editor_controller.dart';
 import '../application/diary_timeline_providers.dart';
 import '../application/media_draft.dart';
 import '../application/media_picker_service.dart';
-import '../application/tag_picker_providers.dart';
 import 'widgets/media_picker_grid.dart';
 import 'widgets/tag_picker_section.dart';
 
@@ -38,6 +37,7 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
   late DateTime _recordedAt;
   Set<String> _selectedTagIds = {};
   List<DiaryMediaDraft> _mediaDrafts = [];
+  String _selectedCategory = 'system-daily';
   bool _initialized = false;
   bool _isSaving = false;
 
@@ -73,6 +73,9 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
         }
       },
       child: Scaffold(
+        bottomNavigationBar: const RabyBottomNavigation(
+          currentPath: AppRoutes.records,
+        ),
         body: SafeArea(
           child: CustomScrollView(
             slivers: [
@@ -81,18 +84,16 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
                   RabySpacing.md,
                   RabySpacing.sm,
                   RabySpacing.md,
-                  RabySpacing.xl,
+                  RabySpacing.lg,
                 ),
                 sliver: SliverList.list(
                   children: [
-                    _EditorTopBar(
-                      title: _isEditing ? '编辑日记' : '写生活日记',
-                      canSave: _canSave,
-                      isSaving: _isSaving,
+                    RabyTopBar(
+                      title: _isEditing ? '编辑日记' : '写日记',
                       onBack: () => context.go(AppRoutes.records),
-                      onSave: () => _submit(),
+                      enabled: !_isSaving,
                     ),
-                    const SizedBox(height: RabySpacing.lg),
+                    const SizedBox(height: RabySpacing.md),
                     rabbitState.when(
                       data: (rabbit) {
                         if (rabbit == null) {
@@ -108,14 +109,18 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
                           rabbit: rabbit,
                           contentController: _contentController,
                           recordedAt: _recordedAt,
+                          selectedCategory: _selectedCategory,
                           selectedTagIds: _selectedTagIds,
                           mediaDrafts: _mediaDrafts,
                           enabled: !_isSaving,
                           onPickDate: _pickDate,
+                          onCategoryChanged: _changeCategory,
                           onAddMedia: _pickImages,
                           onRemoveMedia: _removeMediaDraft,
                           onTagsChanged: (tagIds) =>
                               setState(() => _selectedTagIds = tagIds),
+                          onOpenWeight: () =>
+                              context.push(AppRoutes.weightNew, extra: true),
                           onSubmit: _canSave ? () => _submit() : null,
                           isSaving: _isSaving,
                         );
@@ -161,13 +166,16 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
           rabbit: rabbit,
           contentController: _contentController,
           recordedAt: _recordedAt,
+          selectedCategory: _selectedCategory,
           selectedTagIds: _selectedTagIds,
           mediaDrafts: _mediaDrafts,
           enabled: !_isSaving,
           onPickDate: _pickDate,
+          onCategoryChanged: _changeCategory,
           onAddMedia: _pickImages,
           onRemoveMedia: _removeMediaDraft,
           onTagsChanged: (tagIds) => setState(() => _selectedTagIds = tagIds),
+          onOpenWeight: () => context.push(AppRoutes.weightNew, extra: true),
           onSubmit: _canSave ? () => _submit(existing: entry) : null,
           isSaving: _isSaving,
         );
@@ -188,6 +196,13 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
     _contentController.text = entry.diary.content ?? '';
     _recordedAt = entry.diary.recordedAt;
     _selectedTagIds = entry.tags.map((tag) => tag.id).toSet();
+    if (_selectedTagIds.contains('system-vet')) {
+      _selectedCategory = 'system-vet';
+    } else if (_selectedTagIds.contains('system-hay')) {
+      _selectedCategory = 'system-hay';
+    } else {
+      _selectedCategory = 'system-daily';
+    }
     _mediaDrafts = entry.media
         .map((media) => ExistingDiaryMediaDraft(media))
         .toList(growable: false);
@@ -266,6 +281,16 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
     });
   }
 
+  void _changeCategory(String category) {
+    const persistedCategoryIds = {'system-daily', 'system-hay', 'system-vet'};
+    setState(() {
+      _selectedCategory = category;
+      _selectedTagIds = {..._selectedTagIds}
+        ..removeAll(persistedCategoryIds)
+        ..addAll(persistedCategoryIds.contains(category) ? [category] : []);
+    });
+  }
+
   Future<void> _submit({DiaryEntry? existing}) async {
     if (!_canSave) {
       return;
@@ -319,64 +344,21 @@ class _DiaryEditPageState extends ConsumerState<DiaryEditPage> {
   }
 }
 
-class _EditorTopBar extends StatelessWidget {
-  const _EditorTopBar({
-    required this.title,
-    required this.canSave,
-    required this.isSaving,
-    required this.onBack,
-    required this.onSave,
-  });
-
-  final String title;
-  final bool canSave;
-  final bool isSaving;
-  final VoidCallback onBack;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        RabyIconBubble(
-          icon: RabyIconKind.back,
-          tooltip: '返回',
-          onTap: isSaving ? null : onBack,
-        ),
-        const SizedBox(width: RabySpacing.sm),
-        Expanded(
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 28,
-              color: RabyColors.secondary,
-            ),
-          ),
-        ),
-        RabyIconBubble(
-          icon: RabyIconKind.more,
-          tooltip: isSaving ? '保存中' : '保存',
-          iconColor: canSave ? RabyColors.secondary : RabyColors.textTertiary,
-          onTap: canSave ? onSave : null,
-        ),
-      ],
-    );
-  }
-}
-
 class _DiaryForm extends StatelessWidget {
   const _DiaryForm({
     required this.rabbit,
     required this.contentController,
     required this.recordedAt,
+    required this.selectedCategory,
     required this.selectedTagIds,
     required this.mediaDrafts,
     required this.enabled,
     required this.onPickDate,
+    required this.onCategoryChanged,
     required this.onAddMedia,
     required this.onRemoveMedia,
     required this.onTagsChanged,
+    required this.onOpenWeight,
     required this.onSubmit,
     required this.isSaving,
   });
@@ -384,13 +366,16 @@ class _DiaryForm extends StatelessWidget {
   final Rabbit rabbit;
   final TextEditingController contentController;
   final DateTime recordedAt;
+  final String selectedCategory;
   final Set<String> selectedTagIds;
   final List<DiaryMediaDraft> mediaDrafts;
   final bool enabled;
   final VoidCallback onPickDate;
+  final ValueChanged<String> onCategoryChanged;
   final VoidCallback onAddMedia;
   final ValueChanged<int> onRemoveMedia;
   final ValueChanged<Set<String>> onTagsChanged;
+  final VoidCallback onOpenWeight;
   final VoidCallback? onSubmit;
   final bool isSaving;
 
@@ -400,36 +385,43 @@ class _DiaryForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RabyCard(
-          radius: RabyRadius.xl,
-          softShadow: true,
-          gradient: const LinearGradient(
-            colors: [RabyColors.surfaceWarm, RabyColors.paper],
-          ),
+          radius: RabyRadius.lg,
+          color: RabyColors.surfaceSoft,
+          padding: const EdgeInsets.all(RabySpacing.ms),
           child: Row(
             children: [
-              RabbitAvatar(
-                avatarPath: rabbit.avatarPath,
-                size: 64,
-                iconSize: 34,
-                borderWidth: 4,
-                borderColor: RabyColors.stickerBorder,
-              ),
-              const SizedBox(width: RabySpacing.md),
+              if (rabbit.avatarPath == null || rabbit.avatarPath!.isEmpty)
+                const RabyImageSlot(
+                  width: 52,
+                  height: 52,
+                  radius: RabyRadius.pill,
+                  semanticLabel: '兔兔头像待替换',
+                )
+              else
+                RabbitAvatar(
+                  avatarPath: rabbit.avatarPath,
+                  size: 52,
+                  iconSize: 26,
+                  borderWidth: 3,
+                  borderColor: RabyColors.stickerBorder,
+                ),
+              const SizedBox(width: RabySpacing.ms),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       rabbit.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: RabyColors.secondary,
+                        fontFamily: 'RabyChillRoundM',
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       _formatDate(recordedAt),
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: RabyColors.secondary,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: RabyColors.textSecondary,
                       ),
                     ),
                   ],
@@ -437,25 +429,24 @@ class _DiaryForm extends StatelessWidget {
               ),
               RabyIconBubble(
                 icon: RabyIconKind.calendar,
-                size: 48,
-                iconSize: 22,
+                size: 42,
+                iconSize: 20,
                 tooltip: '选择日期',
                 onTap: enabled ? onPickDate : null,
               ),
             ],
           ),
         ),
-        const SizedBox(height: RabySpacing.md),
-        _QuickTagCard(
-          rabbitId: rabbit.id,
-          selectedTagIds: selectedTagIds,
+        const SizedBox(height: RabySpacing.ms),
+        _DiaryCategorySelector(
+          selected: selectedCategory,
           enabled: enabled,
-          onChanged: onTagsChanged,
+          onChanged: onCategoryChanged,
         ),
-        const SizedBox(height: RabySpacing.md),
+        const SizedBox(height: RabySpacing.ms),
         RabyCard(
-          softShadow: true,
-          radius: RabyRadius.xl,
+          radius: RabyRadius.lg,
+          padding: const EdgeInsets.all(RabySpacing.ms),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -464,7 +455,7 @@ class _DiaryForm extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   color: RabyColors.textPrimary,
                   fontWeight: FontWeight.w900,
-                  fontSize: 18,
+                  fontSize: 15,
                 ),
               ),
               const SizedBox(height: RabySpacing.sm),
@@ -472,8 +463,8 @@ class _DiaryForm extends StatelessWidget {
                 controller: contentController,
                 enabled: enabled,
                 maxLength: 1000,
-                minLines: 6,
-                maxLines: 10,
+                minLines: 3,
+                maxLines: 6,
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: '记录${rabbit.name}今天的可爱瞬间吧～',
@@ -483,41 +474,43 @@ class _DiaryForm extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: RabySpacing.md),
+        const SizedBox(height: RabySpacing.ms),
         MediaPickerGrid(
           mediaDrafts: mediaDrafts,
           enabled: enabled,
           onAdd: onAddMedia,
           onRemove: onRemoveMedia,
         ),
-        const SizedBox(height: RabySpacing.md),
-        RabyCard(
-          softShadow: true,
-          padding: EdgeInsets.zero,
-          child: ListTile(
-            enabled: enabled,
-            minVerticalPadding: RabySpacing.md,
-            leading: const RabySketchIcon(
-              kind: RabyIconKind.calendar,
-              color: RabyColors.primaryDeep,
-            ),
-            title: Text('记录日期', style: Theme.of(context).textTheme.titleSmall),
-            subtitle: Text(_formatDate(recordedAt)),
-            trailing: const RabySketchIcon(kind: RabyIconKind.chevronRight),
-            onTap: enabled ? onPickDate : null,
-          ),
-        ),
-        const SizedBox(height: RabySpacing.md),
+        const SizedBox(height: RabySpacing.ms),
         TagPickerSection(
           rabbitId: rabbit.id,
           selectedTagIds: selectedTagIds,
           enabled: enabled,
+          title: '今日状态',
           onChanged: onTagsChanged,
         ),
-        const SizedBox(height: RabySpacing.lg),
+        const SizedBox(height: RabySpacing.ms),
+        RabyCard(
+          color: RabyColors.surfaceSoft,
+          padding: EdgeInsets.zero,
+          child: ListTile(
+            dense: true,
+            leading: const RabySketchIcon(
+              kind: RabyIconKind.weight,
+              color: RabyColors.primaryDeep,
+            ),
+            title: const Text('今天还没有记录体重'),
+            subtitle: const Text('可以顺手补一条，日记会保留当前内容。'),
+            trailing: TextButton(
+              onPressed: enabled ? onOpenWeight : null,
+              child: const Text('去记录'),
+            ),
+          ),
+        ),
+        const SizedBox(height: RabySpacing.md),
         SizedBox(
           width: double.infinity,
-          height: 62,
+          height: 54,
           child: FilledButton.icon(
             onPressed: onSubmit,
             icon: isSaving
@@ -535,134 +528,52 @@ class _DiaryForm extends StatelessWidget {
   }
 }
 
-class _QuickTagCard extends ConsumerWidget {
-  const _QuickTagCard({
-    required this.rabbitId,
-    required this.selectedTagIds,
+class _DiaryCategorySelector extends StatelessWidget {
+  const _DiaryCategorySelector({
+    required this.selected,
     required this.enabled,
     required this.onChanged,
   });
 
-  final String rabbitId;
-  final Set<String> selectedTagIds;
+  final String selected;
   final bool enabled;
-  final ValueChanged<Set<String>> onChanged;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tagsState = ref.watch(availableTagsProvider(rabbitId));
-
-    return RabyCard(
-      radius: RabyRadius.xl,
-      softShadow: true,
-      child: tagsState.when(
-        data: (tags) {
-          final systemTags = tags.where((tag) => tag.isSystem).toList();
-          if (systemTags.isEmpty) {
-            return const RabyMutedText('系统标签暂时不可用。');
-          }
-          return Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (final tag in systemTags)
-                _QuickTagChip(
-                  tag: tag,
-                  selected: selectedTagIds.contains(tag.id),
-                  enabled: enabled,
-                  onSelected: (selected) {
-                    final next = {...selectedTagIds};
-                    if (selected) {
-                      next.add(tag.id);
-                    } else {
-                      next.remove(tag.id);
-                    }
-                    onChanged(next);
-                  },
-                ),
-            ],
-          );
-        },
-        loading: () => const RabyMutedText('标签加载中...'),
-        error: (error, _) => Text('标签读取失败: ${_errorMessage(error)}'),
-      ),
-    );
-  }
-}
-
-class _QuickTagChip extends StatelessWidget {
-  const _QuickTagChip({
-    required this.tag,
-    required this.selected,
-    required this.enabled,
-    required this.onSelected,
-  });
-
-  final Tag tag;
-  final bool selected;
-  final bool enabled;
-  final ValueChanged<bool> onSelected;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final isMilestone = tag.tagKind == TagKind.milestone;
-    return InkWell(
-      key: ValueKey('quick-tag-${tag.id}'),
-      borderRadius: BorderRadius.circular(RabyRadius.pill),
-      onTap: enabled ? () => onSelected(!selected) : null,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: selected
-              ? RabyColors.surfaceWarm
-              : (isMilestone ? RabyColors.paper : RabyColors.surface),
-          borderRadius: BorderRadius.circular(RabyRadius.pill),
-          border: Border.all(
-            color: selected
-                ? (isMilestone ? RabyColors.secondary : RabyColors.primary)
-                : RabyColors.border,
-            width: selected ? 1.5 : 1,
+    return SizedBox(
+      width: double.infinity,
+      child: SegmentedButton<String>(
+        showSelectedIcon: false,
+        segments: const [
+          ButtonSegment(
+            value: 'system-daily',
+            label: Text('日常', style: TextStyle(fontFamily: 'RabyChillRoundF')),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RabySketchIcon(
-                kind: selected ? RabyIconKind.check : _quickTagIcon(tag.name),
-                size: 18,
-                color: selected
-                    ? (isMilestone
-                          ? RabyColors.secondary
-                          : RabyColors.primaryDeep)
-                    : RabyColors.textSecondary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                tag.name,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: isMilestone
-                      ? RabyColors.secondary
-                      : RabyColors.primary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
+          ButtonSegment(
+            value: 'system-hay',
+            label: Text('饮食', style: TextStyle(fontFamily: 'RabyChillRoundF')),
           ),
-        ),
+          ButtonSegment(
+            value: 'category-mood',
+            label: Text('心情', style: TextStyle(fontFamily: 'RabyChillRoundF')),
+          ),
+          ButtonSegment(
+            value: 'system-vet',
+            label: Text('健康', style: TextStyle(fontFamily: 'RabyChillRoundF')),
+          ),
+        ],
+        selected: {selected},
+        onSelectionChanged: enabled
+            ? (values) {
+                if (values.isNotEmpty) {
+                  onChanged(values.first);
+                }
+              }
+            : null,
       ),
     );
   }
-}
-
-RabyIconKind _quickTagIcon(String name) {
-  return switch (name) {
-    '日常' => RabyIconKind.diary,
-    '吃草' => RabyIconKind.rabbit,
-    '看兽医' => RabyIconKind.check,
-    '里程碑' => RabyIconKind.check,
-    _ => RabyIconKind.circle,
-  };
 }
 
 class _NoRabbitCard extends StatelessWidget {

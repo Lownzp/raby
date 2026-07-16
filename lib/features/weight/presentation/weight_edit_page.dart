@@ -21,9 +21,14 @@ import '../application/weight_editor_controller.dart';
 import '../application/weight_providers.dart';
 
 class WeightEditPage extends ConsumerStatefulWidget {
-  const WeightEditPage({this.recordId, super.key});
+  const WeightEditPage({
+    this.recordId,
+    this.returnToPrevious = false,
+    super.key,
+  });
 
   final String? recordId;
+  final bool returnToPrevious;
 
   @override
   ConsumerState<WeightEditPage> createState() => _WeightEditPageState();
@@ -89,7 +94,7 @@ class _WeightEditPageState extends ConsumerState<WeightEditPage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && !_isSaving) {
-          context.go(AppRoutes.weight);
+          _leaveEditor();
         }
       },
       child: Scaffold(
@@ -110,7 +115,7 @@ class _WeightEditPageState extends ConsumerState<WeightEditPage> {
                   children: [
                     RabyTopBar(
                       title: _isEditing ? '编辑体重' : '记录体重',
-                      onBack: () => context.go(AppRoutes.weight),
+                      onBack: _leaveEditor,
                       actionIcon: RabyIconKind.calendar,
                       actionTooltip: canPickDate ? '选择日期' : '请先建立兔兔档案',
                       onAction: canPickDate ? _pickDate : null,
@@ -183,7 +188,7 @@ class _WeightEditPageState extends ConsumerState<WeightEditPage> {
     return recordState.when(
       data: (record) {
         if (record == null) {
-          return _MissingWeightCard(onBack: () => context.go(AppRoutes.weight));
+          return _MissingWeightCard(onBack: _leaveEditor);
         }
         _hydrate(record);
         final previousRecord = ref
@@ -305,7 +310,7 @@ class _WeightEditPageState extends ConsumerState<WeightEditPage> {
       if (!mounted) {
         return;
       }
-      context.go(AppRoutes.weight);
+      _leaveEditor();
     } catch (error) {
       if (!mounted) {
         return;
@@ -320,6 +325,14 @@ class _WeightEditPageState extends ConsumerState<WeightEditPage> {
   DateTime _today() {
     final now = ref.read(clockProvider)().toLocal();
     return DateTime(now.year, now.month, now.day);
+  }
+
+  void _leaveEditor() {
+    if (widget.returnToPrevious && context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go(AppRoutes.weight);
   }
 }
 

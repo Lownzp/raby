@@ -17,6 +17,7 @@ class TagPickerSection extends ConsumerStatefulWidget {
     required this.rabbitId,
     required this.selectedTagIds,
     required this.onChanged,
+    this.title = '标签',
     this.enabled = true,
     super.key,
   });
@@ -24,6 +25,7 @@ class TagPickerSection extends ConsumerStatefulWidget {
   final String rabbitId;
   final Set<String> selectedTagIds;
   final ValueChanged<Set<String>> onChanged;
+  final String title;
   final bool enabled;
 
   @override
@@ -36,7 +38,7 @@ class _TagPickerSectionState extends ConsumerState<TagPickerSection> {
     final tagsState = ref.watch(availableTagsProvider(widget.rabbitId));
 
     return RabyCard(
-      softShadow: true,
+      padding: const EdgeInsets.all(RabySpacing.ms),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -44,7 +46,7 @@ class _TagPickerSectionState extends ConsumerState<TagPickerSection> {
             children: [
               Expanded(
                 child: Text(
-                  '标签',
+                  widget.title,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: RabyColors.textPrimary,
                     fontWeight: FontWeight.w800,
@@ -208,6 +210,8 @@ class _SelectableTagChip extends StatelessWidget {
       selected: selected,
       onSelected: enabled ? onSelected : null,
       showCheckmark: true,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
       avatar: RabySketchIcon(
         kind: selected ? RabyIconKind.check : RabyIconKind.circle,
         size: 18,

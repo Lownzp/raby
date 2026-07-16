@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,7 @@ import '../../../../app/providers/repository_providers.dart';
 import '../../../../app/theme/raby_colors.dart';
 import '../../../../app/theme/raby_tokens.dart';
 import '../../../../shared/widgets/raby_card.dart';
-import '../../../../shared/widgets/raby_page.dart';
+import '../../../../shared/widgets/raby_image_slot.dart';
 import '../../../../shared/widgets/raby_sketch_icon.dart';
 import '../../application/media_draft.dart';
 
@@ -54,39 +55,32 @@ class MediaPickerGrid extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: RabySpacing.sm),
-          if (mediaDrafts.isEmpty)
-            _AddPhotoTile(
-              enabled: canAdd,
-              onTap: onAdd,
-              label: '添加照片',
-              description: '最多 9 张,可先保存到时间轴。',
-            )
-          else
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: mediaDrafts.length + (canAdd ? 1 : 0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemBuilder: (context, index) {
-                if (index == mediaDrafts.length) {
-                  return _AddPhotoTile(
-                    enabled: canAdd,
-                    onTap: onAdd,
-                    compact: true,
-                    label: '添加',
-                  );
-                }
-                return _MediaDraftTile(
-                  draft: mediaDrafts[index],
-                  enabled: enabled,
-                  onRemove: () => onRemove(index),
-                );
-              },
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: math.max(3, mediaDrafts.length + (canAdd ? 1 : 0)),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 1.32,
             ),
+            itemBuilder: (context, index) {
+              if (index >= mediaDrafts.length) {
+                return _AddPhotoTile(
+                  enabled: canAdd,
+                  onTap: onAdd,
+                  compact: true,
+                  label: '添加',
+                );
+              }
+              return _MediaDraftTile(
+                draft: mediaDrafts[index],
+                enabled: enabled,
+                onRemove: () => onRemove(index),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -98,14 +92,12 @@ class _AddPhotoTile extends StatelessWidget {
     required this.enabled,
     required this.onTap,
     required this.label,
-    this.description,
     this.compact = false,
   });
 
   final bool enabled;
   final VoidCallback onTap;
   final String label;
-  final String? description;
   final bool compact;
 
   @override
@@ -145,10 +137,6 @@ class _AddPhotoTile extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  if (description != null) ...[
-                    const SizedBox(height: RabySpacing.xs),
-                    RabyMutedText(description!),
-                  ],
                 ],
               ),
             ),
@@ -265,18 +253,9 @@ class _ImagePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: RabyColors.surfaceSoft,
-        border: Border.all(color: RabyColors.border),
-      ),
-      child: const Center(
-        child: RabySketchIcon(
-          kind: RabyIconKind.photo,
-          color: RabyColors.primaryDeep,
-          size: 38,
-        ),
-      ),
+    return const RabyImageSlot(
+      radius: RabyRadius.md,
+      semanticLabel: '日记照片加载占位',
     );
   }
 }
