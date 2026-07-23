@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Raby 配色实验台</title>
+  <style>
+    @layer reset, base, components, utilities;
+
+    @layer reset {
+      html { box-sizing: border-box; }
+      body, h1, h2, h3, p { margin: 0; }
+      button, input { font: inherit; }
+    }
+
+    @layer base {
+      :root {
+        --page-bg: #fffaf0;
+        --card-bg: #ffffff;
+        --weight-card-bg: #fcedcf;
+        --input-bg: #ffffff;
+        --primary: #ffab1a;
+        --primary-deep: #f59600;
+        --text: #542812;
+        --muted: #8d6c59;
+        --success-bg: #eaffd6;
+        --success: #65bf45;
+        --sticker-border: #ffffff;
+        --studio-bg: #241b17;
+        --studio-panel: #30241f;
+        --studio-line: #4a3730;
+        --studio-text: #fff7ec;
+        --studio-muted: #c8b6aa;
+        --focus: #ffd061;
+        color-scheme: light;
+        font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      }
+
+      body {
+        min-block-size: 100dvh;
+        background:
+          radial-gradient(circle at 85% 10%, rgb(255 178 26 / 16%), transparent 28rem),
+          var(--studio-bg);
+        color: var(--studio-text);
+        line-height: 1.45;
+      }
+
+      :where(button, input):focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 3px;
+      }
+    }
+
+    @layer components {
+      .app-shell {
+        display: grid;
+        grid-template-columns: minmax(21rem, 30rem) minmax(28rem, 1fr);
+        min-block-size: 100dvh;
+      }
+
+      .control-panel {
+        padding: clamp(1.25rem, 3vw, 2.5rem);
+        background: rgb(48 36 31 / 92%);
+        border-inline-end: 1px solid var(--studio-line);
+        backdrop-filter: blur(18px);
+      }
+
+      .eyebrow {
+        color: #ffc14a;
+        font-size: .76rem;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin-block-start: .35rem;
+        font-size: clamp(2rem, 4vw, 3.3rem);
+        line-height: 1.05;
+        letter-spacing: -.045em;
+        text-wrap: balance;
+      }
+
+      .intro {
+        margin-block-start: .85rem;
+        max-inline-size: 40rem;
+        color: var(--studio-muted);
+        font-size: .94rem;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        margin-block: 1.4rem 1rem;
+      }
+
+      .button {
+        min-block-size: 2.65rem;
+        padding-inline: 1rem;
+        border: 1px solid var(--studio-line);
+        border-radius: 999px;
+        background: #3a2b25;
+        color: var(--studio-text);
+        cursor: pointer;
+        transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+      }
+
+      .button:hover:not(:disabled) {
+        border-color: #c88f33;
+        background: #49352c;
+        transform: translateY(-1px);
+      }
+
+      .button.primary {
+        border-color: transparent;
+        background: #ffb21a;
+        color: #48240e;
+        font-weight: 800;
+      }
+
+      .preset-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .65rem;
+        margin-block-end: 1.2rem;
+      }
+
+      .preset {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        min-block-size: 3.4rem;
+        overflow: hidden;
+        border: 1px solid var(--studio-line);
+        border-radius: 1rem;
+        cursor: pointer;
+        background: transparent;
+        padding: 0;
+        position: relative;
+      }
+
+      .preset::after {
+        content: attr(data-name);
+        position: absolute;
+        inset-inline: .5rem;
+        inset-block-end: .35rem;
+        padding: .12rem .4rem;
+        border-radius: .5rem;
+        background: rgb(20 14 11 / 72%);
+        color: #fff;
+        font-size: .68rem;
+        text-align: center;
+      }
+
+      .preset span { display: block; }
+
+      .token-grid { display: grid; gap: .7rem; }
+
+      .token-row {
+        display: grid;
+        grid-template-columns: minmax(7.2rem, 1fr) 3rem minmax(7.2rem, 8.5rem) 2.7rem;
+        align-items: center;
+        gap: .6rem;
+        padding: .72rem;
+        border: 1px solid var(--studio-line);
+        border-radius: 1rem;
+        background: rgb(31 23 20 / 55%);
+      }
+
+      .token-name { font-size: .88rem; font-weight: 700; }
+      .token-key { display: block; color: var(--studio-muted); font: .68rem/1.3 Consolas, monospace; }
+
+      input[type="color"] {
+        inline-size: 3rem;
+        block-size: 2.5rem;
+        padding: .18rem;
+        border: 1px solid var(--studio-line);
+        border-radius: .72rem;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      input[type="text"] {
+        inline-size: 100%;
+        min-block-size: 2.5rem;
+        padding-inline: .7rem;
+        border: 1px solid var(--studio-line);
+        border-radius: .72rem;
+        background: #201815;
+        color: #fff6ec;
+        font-family: Consolas, monospace;
+        text-transform: uppercase;
+      }
+
+      input[type="text"][aria-invalid="true"] { border-color: #ff7586; }
+
+      .copy-one {
+        min-inline-size: 2.7rem;
+        min-block-size: 2.5rem;
+        border: 1px solid var(--studio-line);
+        border-radius: .72rem;
+        background: #3a2b25;
+        color: #ffc966;
+        cursor: pointer;
+      }
+
+      .preview-stage {
+        display: grid;
+        place-items: center;
+        min-inline-size: 0;
+        padding: clamp(1rem, 4vw, 3rem);
+        overflow: auto;
+      }
+
+      .preview-wrap { position: sticky; inset-block-start: 1rem; }
+
+      .preview-tabs {
+        display: flex;
+        gap: .45rem;
+        inline-size: min(36rem, calc(100vw - 2rem));
+        margin-block-end: .8rem;
+        padding-block-end: .35rem;
+        overflow-x: auto;
+        scrollbar-width: thin;
+      }
+
+      .preview-tab {
+        flex: 0 0 auto;
+        min-block-size: 2.35rem;
+        padding-inline: .8rem;
+        border: 1px solid var(--studio-line);
+        border-radius: 999px;
+        background: #332620;
+        color: var(--studio-muted);
+        cursor: pointer;
+        font-size: .78rem;
+      }
+
+      .preview-tab[aria-selected="true"] {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #42220f;
+        font-weight: 900;
+      }
+
+      .preview-label {
+        display: flex;
+        justify-content: space-between;
+        margin-block-end: .7rem;
+        color: var(--studio-muted);
+        font: .74rem/1.4 Consolas, monospace;
+      }
+
+      .phone {
+        inline-size: min(25rem, calc(100vw - 2rem));
+        aspect-ratio: 430 / 932;
+        padding: 1.05rem 1rem .8rem;
+        overflow: hidden;
+        border: .4rem solid #14100e;
+        border-radius: 2.6rem;
+        background: var(--page-bg);
+        color: var(--text);
+        box-shadow: 0 2rem 5rem rgb(0 0 0 / 38%);
+        container-type: inline-size;
+      }
+
+      .preview-page[hidden] { display: none; }
+
+      .phone-header {
+        display: grid;
+        grid-template-columns: 2.7rem 1fr 2.7rem;
+        align-items: center;
+        margin-block-end: .8rem;
+      }
+
+      .round-action {
+        display: grid;
+        place-items: center;
+        inline-size: 2.7rem;
+        block-size: 2.7rem;
+        border: 1px solid color-mix(in srgb, var(--primary) 58%, transparent);
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--input-bg) 84%, white);
+        color: var(--text);
+        font-size: 1.25rem;
+      }
+
+      .phone-title { text-align: center; font-size: 1.25rem; font-weight: 900; }
+
+      .stack { display: grid; gap: .68rem; }
+
+      .app-card {
+        border-radius: 1.35rem;
+        background: var(--card-bg);
+      }
+
+      .rabbit-card {
+        display: flex;
+        align-items: center;
+        gap: .8rem;
+        min-block-size: 5.2rem;
+        padding: .65rem 1rem;
+      }
+
+      .rabbit-sticker {
+        inline-size: 4.3rem;
+        block-size: 4.3rem;
+        object-fit: contain;
+        filter: drop-shadow(0 .22rem .2rem rgb(90 42 22 / 16%));
+      }
+
+      .rabbit-name { font-size: 1.05rem; font-weight: 900; }
+      .muted { color: var(--muted); font-size: .76rem; }
+
+      .weight-card {
+        padding: .85rem .8rem 1rem;
+        border: .22rem solid var(--sticker-border);
+        background: var(--weight-card-bg);
+        text-align: center;
+      }
+
+      .weight-label { font-weight: 900; }
+
+      .weight-row {
+        display: grid;
+        grid-template-columns: 3rem 1fr 3rem;
+        align-items: center;
+        gap: .6rem;
+        margin-block: .75rem .9rem;
+      }
+
+      .step {
+        display: grid;
+        place-items: center;
+        inline-size: 2.8rem;
+        block-size: 2.8rem;
+        border: 1px solid var(--primary);
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--primary) 10%, var(--weight-card-bg));
+        color: var(--primary-deep);
+        font-size: 1.45rem;
+        font-weight: 900;
+        box-shadow: 0 .2rem .75rem color-mix(in srgb, var(--primary) 17%, transparent);
+      }
+
+      .weight-value { font-size: 3.45rem; font-weight: 900; line-height: 1; letter-spacing: -.04em; }
+      .weight-value small { margin-inline-start: .15rem; color: var(--muted); font-size: 1rem; letter-spacing: 0; }
+
+      .ruler {
+        position: relative;
+        block-size: 2.65rem;
+        background: repeating-linear-gradient(90deg, var(--primary) 0 1px, transparent 1px .55rem);
+        background-size: auto 1rem;
+        background-repeat: repeat-x;
+      }
+
+      .ruler::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: 50%;
+        inset-block-start: -.15rem;
+        inline-size: .25rem;
+        block-size: 1.6rem;
+        border-radius: 999px;
+        background: var(--primary-deep);
+      }
+
+      .ruler-labels { display: flex; justify-content: space-between; padding-block-start: 1.15rem; color: var(--muted); font-size: .65rem; }
+
+      .compact-card {
+        display: flex;
+        align-items: center;
+        min-block-size: 3.8rem;
+        padding: .65rem .85rem;
+      }
+
+      .icon-box {
+        display: grid;
+        place-items: center;
+        inline-size: 2.7rem;
+        block-size: 2.7rem;
+        margin-inline-end: .7rem;
+        border: .18rem solid var(--sticker-border);
+        border-radius: .8rem;
+        background: color-mix(in srgb, var(--primary) 15%, white);
+        color: var(--primary-deep);
+        font-weight: 900;
+      }
+
+      .compact-copy { flex: 1; }
+      .compact-title { font-weight: 900; }
+      .chevron { color: var(--text); font-size: 1.5rem; }
+
+      .status {
+        padding: .32rem .75rem;
+        border-radius: 999px;
+        background: var(--success-bg);
+        color: var(--success);
+        font-weight: 800;
+        font-size: .78rem;
+      }
+
+      .note-card { padding: .75rem; }
+      .note-title { margin-block-end: .45rem; font-weight: 900; }
+      .note-box {
+        min-block-size: 4.2rem;
+        padding: .8rem;
+        border: 1px solid color-mix(in srgb, var(--primary) 70%, white);
+        border-radius: 1rem;
+        background: var(--input-bg);
+        color: var(--muted);
+        font-size: .78rem;
+      }
+
+      .save {
+        display: grid;
+        place-items: center;
+        min-block-size: 3.2rem;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 900;
+      }
+
+      .page-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-block-end: .72rem;
+      }
+
+      .page-heading h2 { font-size: 1.18rem; }
+
+      .chip-row { display: flex; gap: .42rem; overflow: hidden; }
+      .chip {
+        flex: 0 0 auto;
+        padding: .32rem .7rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--card-bg) 80%, white);
+        color: var(--muted);
+        font-size: .7rem;
+        font-weight: 800;
+      }
+      .chip.active { background: var(--primary); color: #fff; }
+
+      .hero-card {
+        position: relative;
+        min-block-size: 12rem;
+        padding: 1rem;
+        overflow: hidden;
+        border: .22rem solid var(--sticker-border);
+        background: var(--weight-card-bg);
+      }
+      .hero-card .rabbit-sticker {
+        position: absolute;
+        inset-inline-end: -.25rem;
+        inset-block-end: -.2rem;
+        inline-size: 10.5rem;
+        block-size: 10.5rem;
+      }
+      .hero-copy { position: relative; z-index: 1; max-inline-size: 10rem; }
+      .hero-name { font-size: 1.5rem; font-weight: 900; }
+      .hero-number { margin-block-start: 2.2rem; font-size: 1.8rem; font-weight: 900; }
+
+      .quick-grid, .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .55rem; }
+      .quick-card { padding: .85rem; }
+      .quick-card strong { display: block; margin-block-end: .15rem; }
+
+      .timeline { display: grid; gap: .48rem; }
+      .timeline-item { display: grid; grid-template-columns: 4.2rem 1fr; gap: .65rem; padding: .6rem; }
+      .photo {
+        min-block-size: 4rem;
+        border-radius: .9rem;
+        background:
+          radial-gradient(circle at 58% 42%, #fff 0 15%, transparent 16%),
+          linear-gradient(145deg, color-mix(in srgb, var(--primary) 20%, white), var(--card-bg));
+      }
+      .timeline-item strong { font-size: .78rem; }
+      .timeline-item p { margin-block-start: .2rem; color: var(--muted); font-size: .69rem; }
+
+      .editor-card { padding: .8rem; }
+      .editor-area {
+        min-block-size: 5.2rem;
+        margin-block-start: .5rem;
+        padding: .7rem;
+        border: 1px solid color-mix(in srgb, var(--primary) 70%, white);
+        border-radius: 1rem;
+        background: var(--input-bg);
+        color: var(--muted);
+        font-size: .74rem;
+      }
+      .media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; margin-block-start: .55rem; }
+      .media-slot { aspect-ratio: 1; border: 1px dashed var(--primary); border-radius: .8rem; background: var(--input-bg); }
+
+      .chart-card { padding: .8rem; }
+      .chart {
+        block-size: 7rem;
+        margin-block: .6rem .25rem;
+        border-block-end: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
+        background:
+          linear-gradient(150deg, transparent 46%, var(--primary) 47% 49%, transparent 50%),
+          linear-gradient(170deg, transparent 42%, var(--primary-deep) 43% 45%, transparent 46%);
+      }
+      .stat-grid { grid-template-columns: repeat(3, 1fr); }
+      .stat { padding: .65rem .35rem; text-align: center; }
+      .stat strong { display: block; font-size: 1rem; }
+
+      .detail-card { padding: .85rem; }
+      .detail-card p { margin-block-start: .45rem; color: var(--muted); font-size: .78rem; }
+      .detail-photos { display: grid; grid-template-columns: 1.4fr 1fr; gap: .5rem; margin-block-start: .6rem; }
+      .detail-photos .photo:first-child { min-block-size: 7rem; }
+
+      .album-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; }
+      .album-grid .photo { aspect-ratio: 1; min-block-size: 0; }
+
+      .profile-hero { display: flex; align-items: center; gap: .8rem; padding: 1rem; }
+      .profile-hero .rabbit-sticker { inline-size: 5.5rem; block-size: 5.5rem; }
+      .menu-list { display: grid; gap: .45rem; }
+      .menu-row { display: flex; align-items: center; justify-content: space-between; padding: .8rem 1rem; }
+
+      .onboarding { text-align: center; }
+      .onboarding .rabbit-sticker { inline-size: 9rem; block-size: 9rem; margin-block: .4rem; }
+      .field-list { display: grid; gap: .5rem; text-align: start; }
+      .fake-field { padding: .7rem .8rem; border-radius: .85rem; background: var(--input-bg); color: var(--muted); font-size: .75rem; }
+
+      .code-output {
+        margin-block-start: 1rem;
+        padding: .85rem;
+        border: 1px solid var(--studio-line);
+        border-radius: 1rem;
+        background: #1d1613;
+        color: #f4d8bf;
+        font: .72rem/1.55 Consolas, monospace;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .toast {
+        position: fixed;
+        inset-inline-end: 1.25rem;
+        inset-block-end: 1.25rem;
+        padding: .75rem 1rem;
+        border-radius: 999px;
+        background: #fff3d7;
+        color: #4d2917;
+        font-weight: 800;
+        opacity: 0;
+        transform: translateY(1rem);
+        pointer-events: none;
+        transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      .toast.show { opacity: 1; transform: translateY(0); }
+    }
+
+    @layer utilities {
+      .visually-hidden:where(:not(:focus-within, :active)) {
+        position: absolute !important;
+        clip-path: inset(50%) !important;
+        overflow: hidden !important;
+        width: 1px !important;
+        height: 1px !important;
+        margin: -1px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        white-space: nowrap !important;
+      }
+
+      @media (max-width: 58rem) {
+        .app-shell { grid-template-columns: 1fr; }
+        .control-panel { border-inline-end: 0; border-block-end: 1px solid var(--studio-line); }
+        .preview-stage { min-block-size: 100dvh; }
+        .preview-wrap { position: static; }
+      }
+
+      @media (max-width: 31rem) {
+        .preset-list { grid-template-columns: 1fr; }
+        .token-row { grid-template-columns: 1fr 3rem minmax(7rem, 1fr) 2.7rem; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .button, .toast { transition: none; }
+      }
+
+      @media (forced-colors: active) {
+        .phone, .app-card, .button, .token-row { border: 1px solid CanvasText; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="control-panel" aria-labelledby="page-title">
+      <p class="eyebrow">Raby visual lab</p>
+      <h1 id="page-title">配色实验台</h1>
+      <p class="intro">点色块选择颜色，或直接输入 HEX。右侧会实时预览记体重页面；满意后复制单个色值或整套变量。</p>
+
+      <div class="toolbar">
+        <button class="button primary" type="button" id="copy-css">复制 CSS 变量</button>
+        <button class="button" type="button" id="copy-json">复制 JSON</button>
+        <button class="button" type="button" id="reset">恢复当前 App 配色</button>
+      </div>
+
+      <div class="preset-list" aria-label="配色预设">
+        <button class="preset" type="button" data-preset="apricot" data-name="杏仁奶油">
+          <span style="background:#fffaf0"></span><span style="background:#f7dfbe"></span><span style="background:#fcedcf"></span><span style="background:#ffad18"></span>
+        </button>
+        <button class="preset" type="button" data-preset="peach" data-name="蜜桃手帐">
+          <span style="background:#fff8f0"></span><span style="background:#f8dfd4"></span><span style="background:#fff0dc"></span><span style="background:#ff9f5a"></span>
+        </button>
+        <button class="preset" type="button" data-preset="oat" data-name="燕麦原木">
+          <span style="background:#faf7ed"></span><span style="background:#e9dec7"></span><span style="background:#f2e8d0"></span><span style="background:#dc9428"></span>
+        </button>
+        <button class="preset" type="button" data-preset="lemon" data-name="柠檬软糖">
+          <span style="background:#fffdf1"></span><span style="background:#f4ebbd"></span><span style="background:#fff3bf"></span><span style="background:#f5a900"></span>
+        </button>
+      </div>
+
+      <div class="token-grid" id="token-grid"></div>
+      <pre class="code-output" id="code-output" aria-label="当前 CSS 变量"></pre>
+    </section>
+
+    <section class="preview-stage" aria-labelledby="preview-heading">
+      <div class="preview-wrap">
+        <div class="preview-label"><span id="preview-heading">LIVE PREVIEW · 430 × 932</span><span id="contrast-status">对比度计算中</span></div>
+        <article class="phone" aria-label="Raby 记体重页面配色预览">
+          <header class="phone-header">
+            <span class="round-action" aria-hidden="true">←</span>
+            <h2 class="phone-title">记录体重</h2>
+            <span class="round-action" aria-hidden="true">▦</span>
+          </header>
+
+          <div class="stack">
+            <section class="app-card rabbit-card">
+              <img class="rabbit-sticker" src="../../assets/images/rabbits/home/rabbit_home_sticker_01.png" alt="">
+              <div><h3 class="rabbit-name">糯米</h3><p class="muted">还没有上次记录</p></div>
+            </section>
+
+            <section class="app-card weight-card">
+              <h3 class="weight-label">体重</h3>
+              <div class="weight-row">
+                <span class="step" aria-hidden="true">−</span>
+                <p class="weight-value">1820<small>g</small></p>
+                <span class="step" aria-hidden="true">＋</span>
+              </div>
+              <div class="ruler" aria-hidden="true"><div class="ruler-labels"><span>1600</span><span>1700</span><span>1800</span><span>1900</span><span>2000</span></div></div>
+            </section>
+
+            <section class="app-card compact-card">
+              <span class="icon-box" aria-hidden="true">▦</span>
+              <div class="compact-copy"><h3 class="compact-title">记录日期</h3><p class="muted">2026-06-10</p></div>
+              <span class="chevron" aria-hidden="true">›</span>
+            </section>
+
+            <section class="app-card compact-card">
+              <span class="icon-box" aria-hidden="true">↗</span>
+              <div class="compact-copy"><h3 class="compact-title">首次记录</h3><p class="muted">变化会自动同步到体重趋势。</p></div>
+              <span class="status">平稳</span>
+            </section>
+
+            <section class="app-card note-card">
+              <h3 class="note-title">备注</h3>
+              <div class="note-box">今天食欲、精神状态怎么样？</div>
+            </section>
+
+            <div class="save">✓&nbsp;&nbsp;保存记录</div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const defaults = {
+      pageBg: '#FFFAF0', cardBg: '#FFFFFF', weightCardBg: '#FCEDCF', inputBg: '#FFFFFF',
+      primary: '#FFAB1A', primaryDeep: '#F59600', text: '#542812', muted: '#8D6C59',
+      successBg: '#EAFFD6', success: '#65BF45', stickerBorder: '#FFFFFF'
+    };
+
+    const presets = {
+      apricot: { pageBg:'#FFFAF0', cardBg:'#F7DFBE', weightCardBg:'#FCEDCF', inputBg:'#FFF9EF', primary:'#FFAD18', primaryDeep:'#F59600', text:'#542812', muted:'#8D6C59' },
+      peach: { pageBg:'#FFF8F0', cardBg:'#F8DFD4', weightCardBg:'#FFF0DC', inputBg:'#FFF9F2', primary:'#FF9F5A', primaryDeep:'#F1823B', text:'#55291D', muted:'#906A5E' },
+      oat: { pageBg:'#FAF7ED', cardBg:'#E9DEC7', weightCardBg:'#F2E8D0', inputBg:'#FFFDF7', primary:'#DC9428', primaryDeep:'#C77B12', text:'#49301F', muted:'#806D5D' },
+      lemon: { pageBg:'#FFFDF1', cardBg:'#F4EBBD', weightCardBg:'#FFF3BF', inputBg:'#FFFDF4', primary:'#F5A900', primaryDeep:'#DC8E00', text:'#4C2B12', muted:'#866E55' }
+    };
+
+    const tokens = [
+      ['pageBg','页面背景','--page-bg'], ['cardBg','辅助卡片','--card-bg'], ['weightCardBg','体重主卡','--weight-card-bg'],
+      ['inputBg','输入区域','--input-bg'], ['primary','主题橙','--primary'], ['primaryDeep','强调橙','--primary-deep'],
+      ['text','主文字','--text'], ['muted','次级文字','--muted'], ['successBg','状态背景','--success-bg'],
+      ['success','状态文字','--success'], ['stickerBorder','贴纸白边','--sticker-border']
+    ];
+
+    const state = { ...defaults, ...readStored() };
+    const root = document.documentElement;
+    const grid = document.querySelector('#token-grid');
+    const output = document.querySelector('#code-output');
+    const toast = document.querySelector('#toast');
+    let toastTimer;
+
+    function readStored() {
+      try { return JSON.parse(localStorage.getItem('raby-color-playground') || '{}'); }
+      catch { return {}; }
+    }
+
+    function normalizeHex(value) {
+      const raw = value.trim().replace(/^#/, '');
+      if (/^[0-9a-f]{3}$/i.test(raw)) return `#${raw.split('').map(char => char + char).join('').toUpperCase()}`;
+      if (/^[0-9a-f]{6}$/i.test(raw)) return `#${raw.toUpperCase()}`;
+      return null;
+    }
+
+    function renderControls() {
+      grid.replaceChildren(...tokens.map(([key, label, cssVar]) => {
+        const row = document.createElement('div');
+        row.className = 'token-row';
+        row.innerHTML = `
+          <label class="token-name" for="text-${key}">${label}<span class="token-key">${cssVar}</span></label>
+          <input type="color" id="color-${key}" value="${state[key]}" aria-label="选择${label}颜色">
+          <input type="text" id="text-${key}" value="${state[key]}" maxlength="7" spellcheck="false" autocomplete="off" aria-describedby="hint-${key}">
+          <button class="copy-one" type="button" data-copy="${key}" aria-label="复制${label}色值">⧉</button>
+          <span class="visually-hidden" id="hint-${key}">输入三位或六位十六进制颜色代码</span>`;
+        return row;
+      }));
+
+      for (const [key] of tokens) {
+        const picker = document.querySelector(`#color-${key}`);
+        const text = document.querySelector(`#text-${key}`);
+        picker.addEventListener('input', () => setColor(key, picker.value, true));
+        text.addEventListener('input', () => {
+          const valid = normalizeHex(text.value);
+          text.setAttribute('aria-invalid', String(!valid));
+          if (valid) setColor(key, valid, false);
+        });
+        text.addEventListener('blur', () => { text.value = state[key]; text.setAttribute('aria-invalid', 'false'); });
+      }
+    }
+
+    function setColor(key, value, syncText = true) {
+      const normalized = normalizeHex(value);
+      if (!normalized) return;
+      state[key] = normalized;
+      const [, , cssVar] = tokens.find(item => item[0] === key);
+      root.style.setProperty(cssVar, normalized);
+      const picker = document.querySelector(`#color-${key}`);
+      const text = document.querySelector(`#text-${key}`);
+      if (picker && picker.value.toUpperCase() !== normalized) picker.value = normalized;
+      if (syncText && text) text.value = normalized;
+      localStorage.setItem('raby-color-playground', JSON.stringify(state));
+      updateOutput();
+    }
+
+    function apply(values) {
+      Object.assign(state, values);
+      for (const [key] of tokens) setColor(key, state[key], true);
+    }
+
+    function cssText() {
+      return `:root {\n${tokens.map(([key,,cssVar]) => `  ${cssVar}: ${state[key]};`).join('\n')}\n}`;
+    }
+
+    function updateOutput() {
+      output.textContent = cssText();
+      const ratio = contrast(state.text, state.cardBg);
+      const status = document.querySelector('#contrast-status');
+      status.textContent = `主文字 / 卡片 ${ratio.toFixed(2)}:1 ${ratio >= 4.5 ? '✓' : '⚠'}`;
+    }
+
+    function luminance(hex) {
+      const rgb = [1,3,5].map(index => parseInt(hex.slice(index, index + 2), 16) / 255)
+        .map(value => value <= .03928 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+      return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
+    }
+
+    function contrast(a, b) {
+      const [bright, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+      return (bright + .05) / (dark + .05);
+    }
+
+    async function copy(value, message) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          const helper = document.createElement('textarea');
+          helper.value = value;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.append(helper);
+          helper.select();
+          if (!document.execCommand('copy')) throw new Error('copy failed');
+          helper.remove();
+        }
+        showToast(message);
+      } catch { showToast('浏览器未允许复制，请手动选择下方代码'); }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    grid.addEventListener('click', event => {
+      const button = event.target.closest('[data-copy]');
+      if (button) copy(state[button.dataset.copy], `已复制 ${state[button.dataset.copy]}`);
+    });
+    document.querySelector('#copy-css').addEventListener('click', () => copy(cssText(), '已复制 CSS 变量'));
+    document.querySelector('#copy-json').addEventListener('click', () => copy(JSON.stringify(state, null, 2), '已复制 JSON'));
+    document.querySelector('#reset').addEventListener('click', () => { apply(defaults); showToast('已恢复当前 App 配色'); });
+    document.querySelector('.preset-list').addEventListener('click', event => {
+      const button = event.target.closest('[data-preset]');
+      if (button) { apply(presets[button.dataset.preset]); showToast(`已应用「${button.dataset.name}」`); }
+    });
+
+    renderControls();
+    apply(state);
+  </script>
+</body>
+</html>

@@ -15,6 +15,7 @@ class RabyCard extends StatelessWidget {
     this.clayShadow = false,
     this.sketchShadow = false,
     this.gradient,
+    this.boxShadow = const [],
     super.key,
   });
 
@@ -28,6 +29,7 @@ class RabyCard extends StatelessWidget {
   final bool clayShadow;
   final bool sketchShadow;
   final Gradient? gradient;
+  final List<BoxShadow> boxShadow;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +41,7 @@ class RabyCard extends StatelessWidget {
         gradient: gradient,
         borderRadius: borderRadius,
         border: Border.all(color: borderColor, width: borderWidth),
+        boxShadow: boxShadow,
       ),
       child: Material(
         color: Colors.transparent,

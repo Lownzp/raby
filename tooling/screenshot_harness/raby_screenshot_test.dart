@@ -347,8 +347,7 @@ class _ScreenshotScenario {
   });
 
   factory _ScreenshotScenario.forPage(String page) {
-    final emptyWeights =
-        page == 'home-empty' || page == 'weight-empty' || page == 'weight-edit';
+    final emptyWeights = page == 'home-empty' || page == 'weight-empty';
     final emptyDiaries = page == 'home-empty';
     return _ScreenshotScenario(
       rabbit: _rabbit,

@@ -1,7 +1,11 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ruler_scale_picker/ruler_scale_picker.dart';
 
 import '../../../app/providers/repository_providers.dart';
 import '../../../app/router/app_routes.dart';
@@ -12,10 +16,8 @@ import '../../../domain/models/rabbit.dart';
 import '../../../domain/models/weight_record.dart';
 import '../../../shared/navigation/raby_shell.dart';
 import '../../../shared/widgets/raby_card.dart';
-import '../../../shared/widgets/raby_image_slot.dart';
 import '../../../shared/widgets/raby_page.dart';
 import '../../../shared/widgets/raby_sketch_icon.dart';
-import '../../../shared/widgets/rabbit_avatar.dart';
 import '../../rabbits/application/current_rabbit_providers.dart';
 import '../application/weight_editor_controller.dart';
 import '../application/weight_providers.dart';
@@ -378,33 +380,43 @@ class _WeightEditorForm extends StatelessWidget {
         : change > 0
         ? '上升'
         : '下降';
-    final sliderValue = (currentWeight ?? 1800).clamp(1000, 2500).toDouble();
-
+    final weightTextStyle = Theme.of(context).textTheme.headlineMedium
+        ?.copyWith(
+          color: RabyColors.secondary,
+          fontSize: 58,
+          fontWeight: FontWeight.w900,
+          height: 1,
+        );
+    final weightText = weightController.text.trim().isEmpty
+        ? '1820'
+        : weightController.text.trim();
+    final weightTextPainter = TextPainter(
+      text: TextSpan(text: weightText, style: weightTextStyle),
+      textDirection: Directionality.of(context),
+      maxLines: 1,
+    )..layout();
+    final weightInputWidth = (weightTextPainter.width + 3).clamp(80.0, 168.0);
+    const supportingCardColor = RabyColors.surface;
+    const saveButtonShadow = [
+      BoxShadow(
+        color: Color(0x20FFAB1A),
+        blurRadius: 20,
+        spreadRadius: 0.5,
+        offset: Offset(0, 5),
+      ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RabyCard(
-          color: RabyColors.surfaceSoft,
+          color: supportingCardColor,
           borderColor: RabyColors.stickerBorder,
+          borderWidth: 0,
           radius: RabyRadius.lg,
-          padding: const EdgeInsets.all(RabySpacing.ms),
+          padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
           child: Row(
             children: [
-              if (rabbit.avatarPath == null || rabbit.avatarPath!.isEmpty)
-                const RabyImageSlot(
-                  width: 58,
-                  height: 58,
-                  radius: RabyRadius.pill,
-                  semanticLabel: '兔兔头像待替换',
-                )
-              else
-                RabbitAvatar(
-                  avatarPath: rabbit.avatarPath,
-                  size: 58,
-                  iconSize: 28,
-                  borderWidth: 3,
-                  borderColor: RabyColors.stickerBorder,
-                ),
+              _RabbitProfileSticker(name: rabbit.name),
               const SizedBox(width: RabySpacing.ms),
               Expanded(
                 child: Column(
@@ -415,17 +427,21 @@ class _WeightEditorForm extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: RabyColors.secondary,
                         fontFamily: 'RabyChillRoundM',
+                        fontSize: 20,
+                        height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 10),
                     Text(
                       previousRecord == null
                           ? '还没有上次记录'
-                          : '上次记录：${_formatDate(previousRecord!.recordedAt)} · ${previousRecord!.weightGrams}g',
+                          : '上次记录 · ${_formatMonthDay(previousRecord!.recordedAt)} · ${previousRecord!.weightGrams}g',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: RabyColors.textSecondary,
+                        fontSize: 14,
+                        height: 1.3,
                       ),
                     ),
                   ],
@@ -437,98 +453,90 @@ class _WeightEditorForm extends StatelessWidget {
         const SizedBox(height: RabySpacing.ms),
         RabyCard(
           radius: RabyRadius.lg,
-          color: RabyColors.surfaceSoft,
-          padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+          color: const Color(0xFFFCEDCF),
+          borderColor: RabyColors.stickerBorder,
+          borderWidth: 4,
+          padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
           child: Column(
             children: [
               Text(
-                '体重 (g)',
+                '体重',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: RabyColors.secondary,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(height: RabySpacing.sm),
-              Row(
-                children: [
-                  _RoundStepButton(
-                    icon: RabyIconKind.minus,
-                    enabled: enabled,
-                    onTap: () => _adjustWeight(weightController, -10),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: weightController,
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  children: [
+                    _RoundStepButton(
+                      icon: RabyIconKind.minus,
                       enabled: enabled,
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: RabyColors.secondary,
-                            fontSize: 58,
-                            fontWeight: FontWeight.w900,
-                            height: 1,
+                      onTap: () => _adjustWeight(weightController, -10),
+                    ),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: weightInputWidth,
+                            child: TextField(
+                              controller: weightController,
+                              enabled: enabled,
+                              textAlign: TextAlign.center,
+                              keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.next,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              style: weightTextStyle,
+                              decoration: InputDecoration(
+                                hintText: '1820',
+                                errorText: weightError,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                                filled: false,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                              ),
+                            ),
                           ),
-                      decoration: InputDecoration(
-                        hintText: '1820',
-                        suffixText: 'g',
-                        suffixStyle: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: RabyColors.textSecondary),
-                        errorText: weightError,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
+                          const SizedBox(width: 4),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 18),
+                            child: Text(
+                              'g',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(color: RabyColors.textSecondary),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  _RoundStepButton(
-                    icon: RabyIconKind.add,
-                    enabled: enabled,
-                    onTap: () => _adjustWeight(weightController, 10),
-                  ),
-                ],
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: RabyColors.primary,
-                  inactiveTrackColor: RabyColors.borderWarm,
-                  thumbColor: RabyColors.primaryDeep,
-                  overlayColor: RabyColors.primary.withValues(alpha: 0.12),
-                  trackHeight: 3,
-                ),
-                child: Slider(
-                  value: sliderValue,
-                  min: 1000,
-                  max: 2500,
-                  divisions: 150,
-                  onChanged: enabled
-                      ? (value) =>
-                            weightController.text = value.round().toString()
-                      : null,
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('1000'),
-                    Text('1500'),
-                    Text('2000'),
-                    Text('2500'),
+                    _RoundStepButton(
+                      icon: RabyIconKind.add,
+                      enabled: enabled,
+                      onTap: () => _adjustWeight(weightController, 10),
+                    ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 10),
+              _WeightRuler(
+                weightController: weightController,
+                enabled: enabled,
               ),
             ],
           ),
         ),
         const SizedBox(height: RabySpacing.ms),
         RabyCard(
+          color: supportingCardColor,
+          borderWidth: 0,
           padding: EdgeInsets.zero,
           child: ListTile(
             enabled: enabled,
@@ -546,7 +554,8 @@ class _WeightEditorForm extends StatelessWidget {
         ),
         const SizedBox(height: RabySpacing.ms),
         RabyCard(
-          color: RabyColors.surfaceSoft,
+          color: supportingCardColor,
+          borderWidth: 0,
           padding: const EdgeInsets.all(RabySpacing.ms),
           child: Row(
             children: [
@@ -593,6 +602,8 @@ class _WeightEditorForm extends StatelessWidget {
         ),
         const SizedBox(height: RabySpacing.ms),
         RabyCard(
+          color: supportingCardColor,
+          borderWidth: 0,
           padding: const EdgeInsets.all(RabySpacing.ms),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -621,32 +632,247 @@ class _WeightEditorForm extends StatelessWidget {
           ),
         ),
         const SizedBox(height: RabySpacing.md),
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: FilledButton.icon(
-            onPressed: onSubmit,
-            style: FilledButton.styleFrom(
-              foregroundColor: RabyColors.onPrimary,
-              disabledForegroundColor: RabyColors.textTertiary,
-            ),
-            icon: isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const RabySketchIcon(
-                    kind: RabyIconKind.check,
-                    color: RabyColors.onPrimary,
-                  ),
-            label: Text(
-              isSaving ? '保存中' : '保存记录',
-              style: const TextStyle(color: RabyColors.onPrimary),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(RabyRadius.pill),
+            boxShadow: saveButtonShadow,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: FilledButton.icon(
+              onPressed: onSubmit,
+              style: FilledButton.styleFrom(
+                foregroundColor: RabyColors.onPrimary,
+                disabledForegroundColor: RabyColors.textTertiary,
+              ),
+              icon: isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const RabySketchIcon(
+                      kind: RabyIconKind.check,
+                      color: RabyColors.onPrimary,
+                    ),
+              label: Text(
+                isSaving ? '保存中' : '保存记录',
+                style: const TextStyle(color: RabyColors.onPrimary),
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RabbitProfileSticker extends StatelessWidget {
+  const _RabbitProfileSticker({required this.name});
+
+  static const _asset = 'assets/images/rabbits/home/rabbit_home_sticker_01.png';
+  static const _outlineOffsets = [
+    Offset(-3, 0),
+    Offset(3, 0),
+    Offset(0, -3),
+    Offset(0, 3),
+    Offset(-2.2, -2.2),
+    Offset(2.2, -2.2),
+    Offset(-2.2, 2.2),
+    Offset(2.2, 2.2),
+  ];
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget image({Color? color}) => Image.asset(
+      _asset,
+      width: 76,
+      height: 76,
+      fit: BoxFit.contain,
+      color: color,
+      colorBlendMode: color == null ? null : BlendMode.srcIn,
+    );
+
+    return Semantics(
+      image: true,
+      label: '$name兔兔贴纸',
+      child: SizedBox.square(
+        dimension: 82,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Transform.translate(
+              offset: const Offset(0, 4),
+              child: ImageFiltered(
+                imageFilter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.mode(
+                    Color(0x295A2A16),
+                    BlendMode.srcIn,
+                  ),
+                  child: image(),
+                ),
+              ),
+            ),
+            for (final offset in _outlineOffsets)
+              Transform.translate(
+                offset: offset,
+                child: image(color: Colors.white),
+              ),
+            image(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WeightRuler extends StatefulWidget {
+  const _WeightRuler({required this.weightController, required this.enabled});
+
+  final TextEditingController weightController;
+  final bool enabled;
+
+  @override
+  State<_WeightRuler> createState() => _WeightRulerState();
+}
+
+class _WeightRulerState extends State<_WeightRuler> {
+  late final NumericRulerScalePickerController _rulerController;
+  bool _syncingFromText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialValue =
+        (int.tryParse(widget.weightController.text.trim()) ?? 1800).clamp(
+          1000,
+          2500,
+        );
+    _rulerController = NumericRulerScalePickerController(
+      firstValue: 1000,
+      lastValue: 2500,
+      interval: 10,
+      initialValue: initialValue,
+    )..addListener(_onRulerChanged);
+    widget.weightController.addListener(_onTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(_WeightRuler oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.weightController != widget.weightController) {
+      oldWidget.weightController.removeListener(_onTextChanged);
+      widget.weightController.addListener(_onTextChanged);
+      _onTextChanged();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.weightController.removeListener(_onTextChanged);
+    _rulerController
+      ..removeListener(_onRulerChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onRulerChanged() {
+    if (_syncingFromText) {
+      return;
+    }
+    final value = _rulerController.value;
+    if (widget.weightController.text != value.toString()) {
+      widget.weightController
+        ..text = value.toString()
+        ..selection = TextSelection.collapsed(offset: value.toString().length);
+    }
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  void _onTextChanged() {
+    final value = int.tryParse(widget.weightController.text.trim());
+    if (value == null || value < 1000 || value > 2500) {
+      return;
+    }
+    final snappedValue = ((value / 10).round() * 10).clamp(1000, 2500);
+    if (_rulerController.value == snappedValue) {
+      return;
+    }
+    _syncingFromText = true;
+    _rulerController.setValue(snappedValue);
+    _syncingFromText = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 78,
+      child: NumericRulerScalePicker(
+        key: const ValueKey('weight-ruler'),
+        controller: _rulerController,
+        options: RulerScalePickerOptions(
+          isEnabled: widget.enabled,
+          showControls: false,
+          majorIndicatorInterval: 10,
+          indicatorExtend: 8,
+        ),
+        scaleMarkerBuilder: (_, _) => const SizedBox.shrink(),
+        scaleIndicatorBuilder:
+            (context, _, value, {required isMajorIndicator}) {
+              final isSelected = value == _rulerController.value;
+              return OverflowBox(
+                minWidth: 8,
+                maxWidth: 56,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: isSelected
+                          ? 5
+                          : isMajorIndicator
+                          ? 2
+                          : 1,
+                      height: isSelected
+                          ? 30
+                          : isMajorIndicator
+                          ? 24
+                          : 13,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? RabyColors.primaryDeep
+                            : isMajorIndicator
+                            ? RabyColors.primaryDeep
+                            : RabyColors.borderWarm,
+                        borderRadius: BorderRadius.circular(RabyRadius.pill),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    SizedBox(
+                      height: 18,
+                      child: isMajorIndicator
+                          ? Text(
+                              '$value',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: RabyColors.textSecondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
+              );
+            },
+      ),
     );
   }
 }
@@ -664,22 +890,87 @@ class _RoundStepButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: RabyColors.paper,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: enabled ? onTap : null,
-        child: SizedBox.square(
-          dimension: 44,
-          child: Center(
-            child: RabySketchIcon(
-              kind: icon,
-              color: enabled ? RabyColors.primaryDeep : RabyColors.textTertiary,
-              size: 20,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: enabled ? RabyColors.surfaceWarm : RabyColors.paper,
+        border: Border.all(
+          color: enabled ? RabyColors.primary : RabyColors.borderWarm,
+          width: 0.6,
+        ),
+        boxShadow: enabled
+            ? [
+                BoxShadow(
+                  color: RabyColors.primary.withValues(alpha: 0.14),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : const [],
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          splashColor: RabyColors.primary.withValues(alpha: 0.16),
+          highlightColor: RabyColors.primary.withValues(alpha: 0.08),
+          onTap: enabled ? onTap : null,
+          child: SizedBox.square(
+            dimension: 44,
+            child: Center(
+              child: _StepGlyph(
+                kind: icon,
+                color: enabled
+                    ? RabyColors.primaryDeep
+                    : RabyColors.textTertiary,
+                size: 20,
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StepGlyph extends StatelessWidget {
+  const _StepGlyph({
+    required this.kind,
+    required this.color,
+    required this.size,
+  });
+
+  final RabyIconKind kind;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    const strokeWidth = 3.0;
+    final lineDecoration = BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(strokeWidth),
+    );
+    return SizedBox.square(
+      dimension: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: size,
+            height: strokeWidth,
+            child: DecoratedBox(decoration: lineDecoration),
+          ),
+          if (kind == RabyIconKind.add)
+            SizedBox(
+              width: strokeWidth,
+              height: size,
+              child: DecoratedBox(decoration: lineDecoration),
+            ),
+        ],
       ),
     );
   }
@@ -753,6 +1044,11 @@ String _formatDate(DateTime date) {
   final month = local.month.toString().padLeft(2, '0');
   final day = local.day.toString().padLeft(2, '0');
   return '${local.year}-$month-$day';
+}
+
+String _formatMonthDay(DateTime date) {
+  final local = date.toLocal();
+  return '${local.month}月${local.day}日';
 }
 
 DateTime _dateOnly(DateTime date) {

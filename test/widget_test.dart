@@ -440,6 +440,65 @@ void main() {
     expect(find.text('1310 g'), findsNothing);
   });
 
+  testWidgets('weight ruler scrolls smoothly and updates the input', (
+    tester,
+  ) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository(
+      seed: [_rabbit(initialWeightGrams: 1280)],
+    );
+    final weightRepository = _FakeWeightRepository();
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(
+      _testApp(rabbitRepository, weightRepository: weightRepository),
+    );
+    await tester.pumpAndSettle();
+
+    await _tapBottomNav(tester, '体重');
+    await tester.tap(find.text('记录第一次体重'));
+    await _pumpRoute(tester);
+
+    final ruler = find.byKey(const ValueKey('weight-ruler'));
+    expect(ruler, findsOneWidget);
+
+    await tester.drag(ruler, const Offset(-80, 0));
+    await tester.pumpAndSettle();
+
+    final weightField = tester.widget<TextField>(find.byType(TextField).first);
+    final selectedWeight = int.parse(weightField.controller!.text);
+    expect(selectedWeight, greaterThan(1280));
+    expect(selectedWeight % 10, 0);
+  });
+
+  testWidgets('weight editor header shows the latest record summary', (
+    tester,
+  ) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository(seed: [_rabbit()]);
+    final weightRepository = _FakeWeightRepository(
+      seed: [
+        _weight(
+          id: 'weight-previous',
+          recordedAt: DateTime(2026, 5, 16, 12),
+          grams: 1810,
+        ),
+      ],
+    );
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(
+      _testApp(
+        rabbitRepository,
+        weightRepository: weightRepository,
+        initialLocation: '/weight/new',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('上次记录 · 5月16日 · 1810g'), findsOneWidget);
+  });
+
   testWidgets('weight range selector filters trend chart', (tester) async {
     _useTallPhoneSurface(tester);
     final rabbitRepository = _FakeRabbitRepository(seed: [_rabbit()]);

@@ -135,7 +135,7 @@ abstract final class RabyTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: RabyColors.paper,
+        fillColor: RabyColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: RabySpacing.md,
           vertical: RabySpacing.md,

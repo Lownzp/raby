@@ -31,6 +31,7 @@ dependencies:
   collection: ^1.19.1
   image_picker: ^1.2.2
   lucide_flutter: ^1.23.0
+  ruler_scale_picker: ^1.0.0
 
 dev_dependencies:
   flutter_test:

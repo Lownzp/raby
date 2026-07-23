@@ -749,6 +749,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.3.2"
+  ruler_scale_picker:
+    dependency: "direct main"
+    description:
+      name: ruler_scale_picker
+      sha256: "9aea87ee26f85db4897d72d4c47735819491a30e097e3589f9c1105ad02cd5b9"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.0"
   shelf:
     dependency: transitive
     description:
