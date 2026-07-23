@@ -75,7 +75,7 @@ IconData _lucideIcon(RabyIconKind kind) {
   return switch (kind) {
     RabyIconKind.add => LucideIcons.plus,
     RabyIconKind.arrowForward => LucideIcons.arrowRight,
-    RabyIconKind.back => LucideIcons.arrowLeft,
+    RabyIconKind.back => LucideIcons.chevronLeft,
     RabyIconKind.bell => LucideIcons.bell,
     RabyIconKind.brokenImage => LucideIcons.imageOff,
     RabyIconKind.calendar => LucideIcons.calendarDays,

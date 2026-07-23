@@ -15,7 +15,7 @@ class RabyCard extends StatelessWidget {
     this.clayShadow = false,
     this.sketchShadow = false,
     this.gradient,
-    this.boxShadow = const [],
+    this.boxShadow = RabyShadows.card,
     super.key,
   });
 

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:raby/app/providers/repository_providers.dart';
 import 'package:raby/app/raby_app.dart';
+import 'package:raby/app/theme/raby_colors.dart';
+import 'package:raby/app/theme/raby_tokens.dart';
 import 'package:raby/data/media/media_storage_service.dart';
 import 'package:raby/domain/domain_validation_exception.dart';
 import 'package:raby/domain/models/diary.dart';
@@ -19,6 +21,8 @@ import 'package:raby/domain/repositories/diary_repository.dart';
 import 'package:raby/domain/repositories/rabbit_repository.dart';
 import 'package:raby/domain/repositories/tag_repository.dart';
 import 'package:raby/domain/repositories/weight_repository.dart';
+import 'package:raby/shared/widgets/raby_card.dart';
+import 'package:raby/shared/widgets/raby_sketch_icon.dart';
 
 void main() {
   testWidgets('starts onboarding when no rabbit exists', (tester) async {
@@ -333,6 +337,60 @@ void main() {
     expect(find.text('写日记'), findsWidgets);
   });
 
+  testWidgets('bottom navigation is compact, full-width, and flush to bottom', (
+    tester,
+  ) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository(seed: [_rabbit()]);
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(_testApp(rabbitRepository));
+    await tester.pumpAndSettle();
+
+    final navigation = find.byKey(const ValueKey('raby-bottom-navigation'));
+    final navigationRect = tester.getRect(navigation);
+    expect(navigationRect.left, 0);
+    expect(navigationRect.width, 430);
+    expect(navigationRect.bottom, 2000);
+    expect(navigationRect.height, 62);
+    final navigationDecoration =
+        tester.widget<DecoratedBox>(navigation).decoration as BoxDecoration;
+    expect(navigationDecoration.border, isNull);
+    expect(navigationDecoration.boxShadow, RabyShadows.topEdge);
+    expect(navigationDecoration.boxShadow, hasLength(1));
+    expect(
+      navigationDecoration.boxShadow!.every(
+        (shadow) => shadow.offset.dy < 0 && shadow.spreadRadius == 0,
+      ),
+      isTrue,
+    );
+
+    for (final label in ['首页', '体重', '我的']) {
+      expect(
+        tester.getSize(find.byKey(ValueKey('raby-tab-icon-$label'))),
+        const Size.square(32),
+      );
+    }
+
+    final selectedTab = find.byKey(const ValueKey('raby-tab-首页'));
+    final selectedInkWell = tester.widget<InkWell>(selectedTab);
+    expect(
+      selectedInkWell.overlayColor?.resolve({WidgetState.hovered}),
+      Colors.transparent,
+    );
+    final selectedIcon = tester.widget<Image>(
+      find.byKey(const ValueKey('raby-tab-icon-首页')),
+    );
+    expect(
+      (selectedIcon.image as AssetImage).assetName,
+      endsWith('icon_tab_home_active.png'),
+    );
+    final selectedLabel = tester.widget<Text>(
+      find.descendant(of: selectedTab, matching: find.text('首页')),
+    );
+    expect(selectedLabel.style?.color, RabyColors.primaryDeep);
+  });
+
   testWidgets('home rabbit sticker cycles through three poses', (tester) async {
     _useTallPhoneSurface(tester);
     final rabbitRepository = _FakeRabbitRepository(seed: [_rabbit()]);
@@ -497,6 +555,104 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('上次记录 · 5月16日 · 1810g'), findsOneWidget);
+  });
+
+  testWidgets('weight editor cards align matching icons and date value', (
+    tester,
+  ) async {
+    _useTallPhoneSurface(tester);
+    final rabbitRepository = _FakeRabbitRepository(seed: [_rabbit()]);
+    addTearDown(rabbitRepository.dispose);
+
+    await tester.pumpWidget(
+      _testApp(rabbitRepository, initialLocation: '/weight/new'),
+    );
+    await tester.pumpAndSettle();
+
+    final dateIcon = find.byKey(const ValueKey('record-date-card-icon'));
+    final changeIcon = find.byKey(const ValueKey('weight-change-card-icon'));
+    final topBarBack = find.byKey(const ValueKey('raby-top-bar-back-button'));
+    final topBarAction = find.byKey(
+      const ValueKey('raby-top-bar-action-button'),
+    );
+
+    expect(dateIcon, findsOneWidget);
+    expect(changeIcon, findsOneWidget);
+    expect(topBarBack, findsOneWidget);
+    expect(topBarAction, findsOneWidget);
+    for (final bubble in [topBarBack, topBarAction]) {
+      final decoratedBox = tester.widget<DecoratedBox>(
+        find.descendant(of: bubble, matching: find.byType(DecoratedBox)),
+      );
+      final decoration = decoratedBox.decoration as BoxDecoration;
+      expect(decoration.border, isNull);
+      expect(decoration.boxShadow, RabyShadows.card);
+    }
+    expect(tester.getSize(dateIcon), const Size.square(50));
+    expect(tester.getSize(changeIcon), const Size.square(50));
+    expect(
+      find.byKey(const ValueKey('rabbit-profile-sticker-shadow-wide')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('rabbit-profile-sticker-shadow-near')),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(dateIcon).dx,
+      moreOrLessEquals(tester.getTopLeft(changeIcon).dx),
+    );
+    expect(find.text('2026 年 6 月 9 日'), findsOneWidget);
+
+    final editorCards = tester.widgetList<RabyCard>(find.byType(RabyCard));
+    expect(editorCards, hasLength(5));
+    for (final card in editorCards) {
+      expect(card.boxShadow, RabyShadows.card);
+    }
+
+    final noteField = find.byKey(const ValueKey('weight-note-field'));
+    final noteIcon = find.byKey(const ValueKey('weight-note-icon'));
+    final recordDateCard = tester.widget<RabyCard>(
+      find.byKey(const ValueKey('record-date-card')),
+    );
+    final weightChangeCard = tester.widget<RabyCard>(
+      find.byKey(const ValueKey('weight-change-card')),
+    );
+    final noteCardFinder = find.byKey(const ValueKey('weight-note-card'));
+    final noteCard = tester.widget<RabyCard>(noteCardFinder);
+    final noteIconWidget = tester.widget<RabySketchIcon>(noteIcon);
+    final noteTextField = tester.widget<TextField>(noteField);
+    expect(find.text('备注'), findsNothing);
+    expect(noteIcon, findsOneWidget);
+    expect(recordDateCard.color, RabyColors.surface);
+    expect(weightChangeCard.color, RabyColors.surface);
+    expect(noteCard.color, RabyColors.surface);
+    expect(noteIconWidget.size, 18);
+    expect(noteIconWidget.color, noteTextField.decoration?.hintStyle?.color);
+    expect(
+      find.descendant(of: noteCardFinder, matching: noteField),
+      findsOneWidget,
+    );
+    expect(noteTextField.decoration?.border, InputBorder.none);
+    expect(noteTextField.decoration?.enabledBorder, InputBorder.none);
+    expect(noteTextField.decoration?.focusedBorder, InputBorder.none);
+    expect(noteTextField.decoration?.disabledBorder, InputBorder.none);
+    expect(noteTextField.maxLength, 200);
+    expect(noteTextField.maxLines, 1);
+    expect(noteTextField.textInputAction, TextInputAction.done);
+    expect(find.text('0/200'), findsNothing);
+
+    final saveButton = find.byKey(const ValueKey('save-weight-record-button'));
+    final saveLabel = find.descendant(
+      of: saveButton,
+      matching: find.text('保存记录'),
+    );
+    expect(
+      find.descendant(of: saveButton, matching: find.byType(Icon)),
+      findsNothing,
+    );
+    expect(tester.getSize(saveButton).height, 54);
+    expect(tester.widget<Text>(saveLabel).style?.fontSize, 20);
   });
 
   testWidgets('weight range selector filters trend chart', (tester) async {

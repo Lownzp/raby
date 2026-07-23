@@ -91,7 +91,7 @@ class RabyIconBubble extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(RabyRadius.xl),
-        border: Border.all(color: RabyColors.border),
+        boxShadow: RabyShadows.card,
       ),
       child: SizedBox.square(
         dimension: size,
@@ -143,6 +143,7 @@ class RabyTopBar extends StatelessWidget {
       child: Row(
         children: [
           RabyIconBubble(
+            key: const ValueKey('raby-top-bar-back-button'),
             icon: RabyIconKind.back,
             tooltip: '返回',
             size: actionSize,
@@ -164,6 +165,7 @@ class RabyTopBar extends StatelessWidget {
             const SizedBox.square(dimension: actionSize)
           else
             RabyIconBubble(
+              key: const ValueKey('raby-top-bar-action-button'),
               icon: actionIcon!,
               tooltip: actionTooltip,
               size: actionSize,

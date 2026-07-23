@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/router/app_routes.dart';
 import '../../app/theme/raby_colors.dart';
 import '../../app/theme/raby_theme.dart';
+import '../../app/theme/raby_tokens.dart';
 
 class RabyShell extends StatelessWidget {
   const RabyShell({required this.currentPath, required this.child, super.key});
@@ -27,17 +28,16 @@ class RabyBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-        child: Container(
-          height: 76,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF6E1),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: RabyColors.stickerBorder, width: 4),
-          ),
+    return DecoratedBox(
+      key: const ValueKey('raby-bottom-navigation'),
+      decoration: const BoxDecoration(
+        color: RabyColors.surface,
+        boxShadow: RabyShadows.topEdge,
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
           child: Row(
             children: [
               for (var index = 0; index < _tabs.length; index++)
@@ -90,40 +90,31 @@ class _RabyTabButton extends StatelessWidget {
         message: tab.label,
         child: InkWell(
           key: ValueKey('raby-tab-${tab.label}'),
-          borderRadius: BorderRadius.circular(34),
           onTap: onTap,
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
           child: Center(
-            child: Container(
-              height: 64,
-              constraints: BoxConstraints(
-                minWidth: selected ? 122 : 56,
-                maxWidth: 128,
-              ),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: selected ? const Color(0xFFFFEDC5) : Colors.transparent,
-                borderRadius: BorderRadius.circular(18),
-              ),
+            child: SizedBox(
+              height: 52,
+              width: 56,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
+                    key: ValueKey('raby-tab-icon-${tab.label}'),
                     selected ? tab.activeAsset : tab.asset,
-                    width: 40,
-                    height: 40,
+                    width: 32,
+                    height: 32,
                     fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 1),
                   Text(
                     tab.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: foreground,
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      height: 0.95,
+                      height: 1,
                       fontFamily: rabyTextFontFamily,
                       fontFamilyFallback: const [
                         'RabyChillRoundM',

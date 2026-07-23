@@ -66,6 +66,10 @@ void main() {
 Future<void> _capturePage(WidgetTester tester, String page) async {
   await _loadScreenshotFonts();
 
+  final shadowsWereDisabled = debugDisableShadows;
+  debugDisableShadows = false;
+  addTearDown(() => debugDisableShadows = shadowsWereDisabled);
+
   final width = _envInt('RABY_SCREENSHOT_WIDTH', 430);
   final height = _envInt('RABY_SCREENSHOT_HEIGHT', 932);
   final pixelRatio = _envDouble('RABY_SCREENSHOT_PIXEL_RATIO', 2);

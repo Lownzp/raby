@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 abstract final class RabySpacing {
   static const xs = 4.0;
   static const sm = 8.0;
@@ -16,4 +18,30 @@ abstract final class RabyRadius {
   static const xl = 28.0;
   static const hero = 34.0;
   static const pill = 999.0;
+}
+
+abstract final class RabyShadows {
+  static const card = <BoxShadow>[
+    BoxShadow(
+      color: Color(0x0FAE761B),
+      blurRadius: 8,
+      spreadRadius: 0,
+      offset: Offset.zero,
+    ),
+    BoxShadow(
+      color: Color(0x0F81520A),
+      blurRadius: 4,
+      spreadRadius: 0,
+      offset: Offset.zero,
+    ),
+  ];
+
+  static const topEdge = <BoxShadow>[
+    BoxShadow(
+      color: Color(0x0FAE761B),
+      blurRadius: 8,
+      spreadRadius: 0,
+      offset: Offset(0, -2),
+    ),
+  ];
 }

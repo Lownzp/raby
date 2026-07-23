@@ -97,7 +97,7 @@ Report which screenshot was regenerated, which tests ran, and whether any unrela
 
 - Visual fidelity improved fastest when component dimensions were measured and adjusted in small passes, not through broad restyling.
 - The page felt heavy when controls, timeline rows, and navigation all grew together; inspect hierarchy after every size increase.
-- Raby's sticker effect comes from white outlines, warm surfaces, spacing, and rounded geometry, not drop shadows.
+- Raby's sticker effect comes from white outlines, warm surfaces, spacing, rounded geometry, and the restrained global `RabyShadows.card` treatment.
 - Font family must be loaded explicitly in both the app and screenshot harness; fallback fonts invalidate comparisons.
 - Hero flexibility requires a scene background plus transparent rabbit sticker, with source assets retained for regeneration.
 - Declaring an asset in `pubspec.yaml` is insufficient. It must exist, be tracked, and be present on the remote branch.

@@ -17,7 +17,7 @@ The home reference is `docs/design/raby-preview-spec/previews/01-home.png`. The 
 - Hierarchy: rabbit first, health/record information second, decoration last.
 - Main text: deep brown, not neutral black or gray.
 - Action color: orange-yellow. Supporting surfaces may use pale yellow, pink, green, or blue.
-- Depth: no drop shadows on cards, buttons, timeline actions, hero, or bottom navigation.
+- Depth: cards use the global `RabyShadows.card` standard: two warm ochre layers at about 6% opacity, 8/4 px blur, zero spread, and zero offset. Buttons may reuse it when they visually behave like cards; bottom navigation stays shadow-free.
 - Layering: use white sticker borders, warm fills, rounded corners, and spacing.
 - Decoration: keep it sparse. Do not cover the rabbit, labels, or data with hearts, sparkles, or flowers.
 
@@ -38,7 +38,7 @@ The font files are declared in `pubspec.yaml` and loaded by `tooling/screenshot_
 ### Top bar
 
 - The visible Raby logo lettering aligns with the hero card's left edge; account for transparent bitmap padding.
-- Search, add, and settings are borderless circular actions with aligned 24 px artwork inside stable 48 px tap areas.
+- Search, add, settings, back, and page actions are borderless circular controls using the global card shadow, with aligned artwork inside stable tap areas.
 - Keep the gap between the top bar and hero compact.
 
 ### Hero
@@ -47,14 +47,14 @@ The font files are declared in `pubspec.yaml` and loaded by `tooling/screenshot_
 - Keep the rabbit large and right-biased so the face remains the primary signal.
 - Rabbit sticker variants cycle on tap and are precached.
 - The rabbit cutout uses an approximately 4 px white outline.
-- The hero card uses a broad rounded rectangle, white border, warm background, and no shadow.
+- The hero card uses a broad rounded rectangle, white border, warm background, and the global card shadow.
 - Pet name uses the half-round font; the nearby accent is a small carrot sticker.
 - The weight panel must not cover too much of the rabbit.
 - The mini trend is intentionally sparse at this size: no crowded axes, point labels, or grid.
 
 ### Quick actions and timeline
 
-- Quick actions are sticker-bordered warm cards without shadows.
+- Quick actions are sticker-bordered warm cards using the global card shadow.
 - Their illustration should read as an independent sticker, not an icon trapped in a heavy white box.
 - Arrow controls are secondary and visually quiet.
 - Timeline rows must remain compact enough to scan while preserving image and text breathing room.
@@ -63,10 +63,10 @@ The font files are declared in `pubspec.yaml` and loaded by `tooling/screenshot_
 
 ### Bottom navigation
 
-- Container: pale warm background, moderate 22 px corner radius, 4 px white border, no shadow.
-- Runtime height is currently 76 px.
-- Selected and unselected icon artwork is fixed at 40x40 px.
-- Selected surface is very pale and approximately one third of the navigation width.
+- Container: full-width white background, square corners, no border, flush to the bottom edge, with the single-layer `RabyShadows.topEdge` visible only above it.
+- Runtime height is currently 62 px.
+- Selected and unselected icon artwork is fixed at 32x32 px.
+- Selection is communicated only through the active icon artwork and label color; there is no selected background.
 - Keep icon-to-label spacing tight and label weight lighter than card titles.
 
 ## Responsive checks

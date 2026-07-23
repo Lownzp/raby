@@ -396,15 +396,8 @@ class _WeightEditorForm extends StatelessWidget {
       maxLines: 1,
     )..layout();
     final weightInputWidth = (weightTextPainter.width + 3).clamp(80.0, 168.0);
+    final noteHelperTextColor = RabyColors.textTertiary.withValues(alpha: 0.72);
     const supportingCardColor = RabyColors.surface;
-    const saveButtonShadow = [
-      BoxShadow(
-        color: Color(0x20FFAB1A),
-        blurRadius: 20,
-        spreadRadius: 0.5,
-        offset: Offset(0, 5),
-      ),
-    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -535,31 +528,56 @@ class _WeightEditorForm extends StatelessWidget {
         ),
         const SizedBox(height: RabySpacing.ms),
         RabyCard(
+          key: const ValueKey('record-date-card'),
           color: supportingCardColor,
           borderWidth: 0,
           padding: EdgeInsets.zero,
-          child: ListTile(
-            enabled: enabled,
-            dense: true,
-            minVerticalPadding: RabySpacing.sm,
-            leading: const RabySketchIcon(
-              kind: RabyIconKind.calendar,
-              color: RabyColors.primary,
-            ),
-            title: Text('记录日期', style: Theme.of(context).textTheme.titleSmall),
-            subtitle: Text(_formatDate(recordedAt)),
-            trailing: const RabySketchIcon(kind: RabyIconKind.chevronRight),
+          child: InkWell(
             onTap: enabled ? onPickDate : null,
+            child: Padding(
+              padding: const EdgeInsets.all(RabySpacing.ms),
+              child: Row(
+                children: [
+                  const RabySticker(
+                    key: ValueKey('record-date-card-icon'),
+                    icon: RabyIconKind.calendar,
+                    size: 50,
+                    background: RabyColors.surfaceWarm,
+                  ),
+                  const SizedBox(width: RabySpacing.md),
+                  Expanded(
+                    child: Text(
+                      '记录日期',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  Text(
+                    _formatDisplayDate(recordedAt),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: RabyColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: RabySpacing.sm),
+                  const RabySketchIcon(
+                    kind: RabyIconKind.chevronRight,
+                    size: 22,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         const SizedBox(height: RabySpacing.ms),
         RabyCard(
+          key: const ValueKey('weight-change-card'),
           color: supportingCardColor,
           borderWidth: 0,
           padding: const EdgeInsets.all(RabySpacing.ms),
           child: Row(
             children: [
               const RabySticker(
+                key: ValueKey('weight-change-card-icon'),
                 icon: RabyIconKind.chart,
                 size: 50,
                 background: RabyColors.surfaceWarm,
@@ -602,63 +620,85 @@ class _WeightEditorForm extends StatelessWidget {
         ),
         const SizedBox(height: RabySpacing.ms),
         RabyCard(
+          key: const ValueKey('weight-note-card'),
           color: supportingCardColor,
           borderWidth: 0,
-          padding: const EdgeInsets.all(RabySpacing.ms),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '备注',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: RabyColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
+          padding: const EdgeInsets.all(RabySpacing.sm),
+          child: TextField(
+            key: const ValueKey('weight-note-field'),
+            controller: noteController,
+            enabled: enabled,
+            maxLength: 200,
+            maxLines: 1,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              hintText: '今天食欲、精神状态怎么样？',
+              hintStyle: TextStyle(color: noteHelperTextColor),
+              counterText: '',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+              prefixIcon: RabySketchIcon(
+                key: const ValueKey('weight-note-icon'),
+                kind: RabyIconKind.diary,
+                size: 18,
+                color: noteHelperTextColor,
               ),
-              const SizedBox(height: RabySpacing.sm),
-              TextField(
-                controller: noteController,
-                enabled: enabled,
-                maxLength: 200,
-                minLines: 2,
-                maxLines: 3,
-                textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(
-                  hintText: '今天食欲、精神状态怎么样？',
-                  alignLabelWithHint: true,
-                ),
+              prefixIconConstraints: const BoxConstraints(minWidth: 44),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: RabySpacing.ms,
+                vertical: RabySpacing.ms,
               ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: RabySpacing.md),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(RabyRadius.pill),
-            boxShadow: saveButtonShadow,
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: FilledButton.icon(
-              onPressed: onSubmit,
-              style: FilledButton.styleFrom(
-                foregroundColor: RabyColors.onPrimary,
-                disabledForegroundColor: RabyColors.textTertiary,
-              ),
-              icon: isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const RabySketchIcon(
-                      kind: RabyIconKind.check,
-                      color: RabyColors.onPrimary,
-                    ),
-              label: Text(
-                isSaving ? '保存中' : '保存记录',
-                style: const TextStyle(color: RabyColors.onPrimary),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(RabyRadius.pill),
+              boxShadow: RabyShadows.card,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: FilledButton(
+                key: const ValueKey('save-weight-record-button'),
+                onPressed: onSubmit,
+                style: FilledButton.styleFrom(
+                  foregroundColor: RabyColors.onPrimary,
+                  disabledForegroundColor: RabyColors.textTertiary,
+                ),
+                child: isSaving
+                    ? const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            '保存中',
+                            style: TextStyle(
+                              color: RabyColors.onPrimary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Text(
+                        '保存记录',
+                        style: TextStyle(
+                          color: RabyColors.onPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -673,14 +713,14 @@ class _RabbitProfileSticker extends StatelessWidget {
 
   static const _asset = 'assets/images/rabbits/home/rabbit_home_sticker_01.png';
   static const _outlineOffsets = [
-    Offset(-3, 0),
-    Offset(3, 0),
-    Offset(0, -3),
-    Offset(0, 3),
-    Offset(-2.2, -2.2),
-    Offset(2.2, -2.2),
-    Offset(-2.2, 2.2),
-    Offset(2.2, 2.2),
+    Offset(-4, 0),
+    Offset(4, 0),
+    Offset(0, -4),
+    Offset(0, 4),
+    Offset(-2.8, -2.8),
+    Offset(2.8, -2.8),
+    Offset(-2.8, 2.8),
+    Offset(2.8, 2.8),
   ];
 
   final String name;
@@ -696,6 +736,19 @@ class _RabbitProfileSticker extends StatelessWidget {
       colorBlendMode: color == null ? null : BlendMode.srcIn,
     );
 
+    Widget silhouette(Color color) => Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: [
+        for (final offset in _outlineOffsets)
+          Transform.translate(
+            offset: offset,
+            child: image(color: color),
+          ),
+        image(color: color),
+      ],
+    );
+
     return Semantics(
       image: true,
       label: '$name兔兔贴纸',
@@ -706,16 +759,19 @@ class _RabbitProfileSticker extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Transform.translate(
-              offset: const Offset(0, 4),
+              offset: const Offset(2, 3),
               child: ImageFiltered(
-                imageFilter: ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                child: ColorFiltered(
-                  colorFilter: const ColorFilter.mode(
-                    Color(0x295A2A16),
-                    BlendMode.srcIn,
-                  ),
-                  child: image(),
-                ),
+                key: const ValueKey('rabbit-profile-sticker-shadow-wide'),
+                imageFilter: ui.ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                child: silhouette(const Color(0x14707070)),
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(1, 2),
+              child: ImageFiltered(
+                key: const ValueKey('rabbit-profile-sticker-shadow-near'),
+                imageFilter: ui.ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                child: silhouette(const Color(0x0F484848)),
               ),
             ),
             for (final offset in _outlineOffsets)
@@ -1039,11 +1095,9 @@ class _MissingWeightCard extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime date) {
+String _formatDisplayDate(DateTime date) {
   final local = date.toLocal();
-  final month = local.month.toString().padLeft(2, '0');
-  final day = local.day.toString().padLeft(2, '0');
-  return '${local.year}-$month-$day';
+  return '${local.year} 年 ${local.month} 月 ${local.day} 日';
 }
 
 String _formatMonthDay(DateTime date) {
